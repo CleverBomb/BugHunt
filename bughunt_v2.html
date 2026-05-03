@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bug Hunt — Time Challenge</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090f;
+  --sidebar-bg:#0c0f1a;
+  --surface:#111420;
+  --surface2:#161929;
+  --border:rgba(255,255,255,0.07);
+  --border2:rgba(255,255,255,0.12);
+  --text:#f0f2ff;
+  --muted:#6b7280;
+  --muted2:#9ca3af;
+  --accent:#6366f1;
+  --accent2:#8b5cf6;
+  --accent3:#a78bfa;
+  --green:#10b981;
+  --amber:#f59e0b;
+  --red:#ef4444;
+  --cyan:#06b6d4;
+  --sidebar-w:260px;
+}
+ 
+body{
+  font-family:'Space Grotesk',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  overflow-x:hidden;
+}
+ 
+/* BG EFFECTS */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 10%,rgba(99,102,241,0.09) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 40% at 10% 80%,rgba(139,92,246,0.06) 0%,transparent 50%);
+  pointer-events:none;z-index:0;
+}
+ 
+/* SIDEBAR */
+#sidebar{
+  width:var(--sidebar-w);
+  min-height:100vh;
+  background:var(--sidebar-bg);
+  border-right:1px solid var(--border);
+  display:none;
+  flex-direction:column;
+  position:fixed;
+  left:0;top:0;bottom:0;
+  z-index:100;
+  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+ 
+.sidebar-logo{
+  padding:28px 24px 20px;
+  border-bottom:1px solid var(--border);
+}
+.logo-mark{
+  font-family:'Syne',sans-serif;
+  font-size:1.5rem;
+  font-weight:800;
+  background:linear-gradient(135deg,var(--accent),var(--accent3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  display:flex;align-items:center;gap:10px;margin-bottom:4px;
+}
+.logo-sub{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+ 
+.sidebar-user{
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:background 0.2s;
+}
+.sidebar-user:hover{background:rgba(255,255,255,0.03)}
+.user-avatar{
+  width:40px;height:40px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;font-weight:700;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:2px solid rgba(99,102,241,0.3);
+  transition:transform 0.2s;
+}
+.sidebar-user:hover .user-avatar{transform:scale(1.05)}
+.user-info .user-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
+.user-info .user-rank{font-size:11px;color:var(--muted)}
+ 
+.sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto}
+.nav-section{margin-bottom:24px}
+.nav-section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:0 10px;margin-bottom:8px}
+ 
+.nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;border-radius:10px;
+  cursor:pointer;font-size:14px;font-weight:500;
+  color:var(--muted2);margin-bottom:2px;
+  transition:all 0.2s;position:relative;
+  border:1px solid transparent;
+}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+.nav-item.active{
+  color:var(--accent3);
+  background:rgba(99,102,241,0.1);
+  border-color:rgba(99,102,241,0.2);
+}
+.nav-item .nav-icon{font-size:16px;width:20px;text-align:center}
+.nav-item .nav-badge{
+  margin-left:auto;font-size:10px;font-weight:700;
+  background:rgba(99,102,241,0.2);color:var(--accent3);
+  padding:2px 7px;border-radius:20px;
+}
+ 
+/* LANG NAV ITEMS */
+.lang-nav-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:10px;
+  cursor:pointer;font-size:13px;font-weight:500;
+  color:var(--muted2);margin-bottom:2px;
+  transition:all 0.2s;position:relative;border:1px solid transparent;
+}
+.lang-nav-item:hover{color:var(--text);background:rgba(255,255,255,0.04)}
+.lang-nav-item.active-python{color:#38bdf8;background:rgba(56,189,248,0.08);border-color:rgba(56,189,248,0.2)}
+.lang-nav-item.active-java{color:#fb923c;background:rgba(251,146,60,0.08);border-color:rgba(251,146,60,0.2)}
+.lang-nav-item.active-js{color:#facc15;background:rgba(250,204,21,0.08);border-color:rgba(250,204,21,0.2)}
+.lang-nav-item.active-cpp{color:#c084fc;background:rgba(192,132,252,0.08);border-color:rgba(192,132,252,0.2)}
+.lang-nav-item.active-csharp{color:#34d399;background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.2)}
+.lang-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-python{background:#38bdf8}
+.dot-java{background:#fb923c}
+.dot-js{background:#facc15}
+.dot-cpp{background:#c084fc}
+.dot-csharp{background:#34d399}
+ 
+.sidebar-stats{
+  padding:16px 20px;
+  border-top:1px solid var(--border);
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+}
+.sb-stat{background:var(--surface);border-radius:10px;padding:10px;text-align:center}
+.sb-stat .sv{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sb-stat .sl{font-size:10px;color:var(--muted);margin-top:2px}
+ 
+/* MAIN CONTENT */
+#main{
+  margin-left:var(--sidebar-w);
+  flex:1;
+  min-height:100vh;
+  position:relative;
+  z-index:1;
+  display:none;
+}
+ 
+/* TOPBAR */
+#topbar{
+  height:56px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;
+  background:rgba(7,9,15,0.8);
+  backdrop-filter:blur(20px);
+  position:sticky;top:0;z-index:50;
+}
+.topbar-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--muted2)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.xp-chip{
+  display:flex;align-items:center;gap:7px;
+  padding:6px 14px;border-radius:20px;
+  background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);
+  font-size:12px;font-weight:600;color:var(--accent3);
+}
+.streak-chip{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:20px;
+  background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);
+  font-size:12px;font-weight:600;color:var(--amber);
+}
+ 
+/* PAGE CONTAINER */
+.page{display:none;padding:32px 28px;animation:pageIn 0.35s cubic-bezier(0.4,0,0.2,1)}
+.page.active{display:block}
+@keyframes pageIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+ 
+/* AUTH PAGE */
+#auth-page{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:40px;margin-left:0;
+  width:100%;
+  position:fixed;top:0;left:0;right:0;bottom:0;
+}
+.auth-card{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:24px;padding:48px;max-width:460px;width:100%;
+  box-shadow:0 40px 80px rgba(0,0,0,0.5);
+  animation:authIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  margin-left:auto;margin-right:auto;
+}
+@keyframes authIn{from{opacity:0;transform:scale(0.9) translateY(30px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.auth-logo{
+  font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;
+  background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  text-align:center;margin-bottom:8px;
+  animation:logoPulse 3s ease-in-out infinite;
+}
+@keyframes logoPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3)}}
+.auth-subtitle{text-align:center;color:var(--muted);font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-bottom:36px}
+.auth-label{font-size:13px;color:var(--muted2);margin-bottom:8px;display:block}
+.auth-input{
+  width:100%;padding:16px 18px;border-radius:14px;
+  background:#0a0d1a;border:1.5px solid var(--border2);
+  color:var(--text);font-size:16px;font-family:'Space Grotesk',sans-serif;
+  outline:none;transition:all 0.2s;margin-bottom:16px;
+}
+.auth-input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(99,102,241,0.12)}
+.auth-input.shake{animation:shake 0.4s ease;border-color:var(--red)!important}
+.auth-btn{
+  width:100%;padding:16px;border-radius:14px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:white;font-size:16px;font-weight:700;
+  border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;
+  transition:all 0.2s;letter-spacing:0.3px;
+}
+.auth-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(99,102,241,0.4)}
+.auth-btn:active{transform:translateY(0)}
+ 
+/* HEADING */
+.page-heading{
+  font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;
+  color:var(--text);margin-bottom:6px;
+}
+.page-desc{font-size:15px;color:var(--muted2);margin-bottom:28px;line-height:1.6}
+ 
+/* DIFF CARDS */
+.diff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.diff-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:18px;padding:28px 20px;cursor:pointer;
+  transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  text-align:center;position:relative;overflow:hidden;
+}
+.diff-card::after{
+  content:'';position:absolute;inset:0;
+  opacity:0;transition:opacity 0.3s;
+  pointer-events:none;
+}
+.diff-card.easy::after{background:radial-gradient(ellipse at 50% 0%,rgba(16,185,129,0.08) 0%,transparent 70%)}
+.diff-card.medium::after{background:radial-gradient(ellipse at 50% 0%,rgba(245,158,11,0.08) 0%,transparent 70%)}
+.diff-card.hard::after{background:radial-gradient(ellipse at 50% 0%,rgba(239,68,68,0.08) 0%,transparent 70%)}
+.diff-card:hover{transform:translateY(-6px) scale(1.02)}
+.diff-card:hover::after{opacity:1}
+.diff-card.easy:hover{border-color:rgba(16,185,129,0.35);box-shadow:0 20px 40px rgba(16,185,129,0.1)}
+.diff-card.medium:hover{border-color:rgba(245,158,11,0.35);box-shadow:0 20px 40px rgba(245,158,11,0.1)}
+.diff-card.hard:hover{border-color:rgba(239,68,68,0.35);box-shadow:0 20px 40px rgba(239,68,68,0.1)}
+.diff-icon{font-size:2.5rem;margin-bottom:12px;display:block}
+.diff-name{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:6px}
+.diff-card.easy .diff-name{color:var(--green)}
+.diff-card.medium .diff-name{color:var(--amber)}
+.diff-card.hard .diff-name{color:var(--red)}
+.diff-desc{font-size:13px;color:var(--muted2);margin-bottom:10px;line-height:1.5}
+.diff-timer{font-size:11px;color:var(--muted);margin-top:6px}
+.diff-stars{font-size:12px;margin-top:4px}
+ 
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:20px;text-align:center;
+  transition:all 0.2s;
+}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-3px)}
+.stat-card .s-label{font-size:12px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
+.stat-card .s-value{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+ 
+/* LANG PAGE TABS (within page) */
+.lang-page-tabs{
+  display:flex;gap:8px;margin-bottom:24px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:6px;
+}
+.lpt{
+  flex:1;padding:10px;border-radius:10px;
+  cursor:pointer;font-size:13px;font-weight:600;
+  color:var(--muted2);transition:all 0.2s;text-align:center;
+  font-family:'Space Grotesk',sans-serif;
+}
+.lpt:hover{color:var(--text)}
+.lpt.active-python{color:#38bdf8;background:rgba(56,189,248,0.1)}
+.lpt.active-java{color:#fb923c;background:rgba(251,146,60,0.1)}
+.lpt.active-js{color:#facc15;background:rgba(250,204,21,0.1)}
+.lpt.active-cpp{color:#c084fc;background:rgba(192,132,252,0.1)}
+.lpt.active-csharp{color:#34d399;background:rgba(52,211,153,0.1)}
+ 
+/* LANG INFO CARD */
+.lang-info-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:18px;padding:24px;margin-bottom:20px;
+  display:flex;align-items:center;gap:20px;
+  animation:cardSlide 0.3s ease;
+}
+@keyframes cardSlide{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.lang-big-icon{font-size:3rem;flex-shrink:0}
+.lang-info h3{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:6px}
+.lang-info p{font-size:14px;color:var(--muted2);line-height:1.6}
+.lang-played-badge{
+  padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;
+  margin-top:8px;display:inline-block;
+}
+ 
+/* GAME SCREEN */
+.game-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.game-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--muted2)}
+.timer-display{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:12px;padding:8px 16px;
+}
+.timer-num{
+  font-family:'Fira Code',monospace;font-size:1.3rem;font-weight:600;
+  color:var(--accent3);transition:color 0.3s;min-width:40px;text-align:center;
+}
+.timer-low{color:var(--red)!important;animation:timerPulse 0.8s ease-in-out infinite}
+@keyframes timerPulse{0%,100%{opacity:1}50%{opacity:0.5}}
+ 
+.progress-wrap{margin-bottom:20px}
+.progress-track{height:4px;background:rgba(255,255,255,0.06);border-radius:10px;overflow:hidden}
+.progress-fill{
+  height:4px;border-radius:10px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));
+  background-size:200%;width:0%;
+  transition:width 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  animation:shimmer 2s linear infinite;
+}
+@keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
+ 
+.question-card{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:20px;padding:28px;margin-bottom:16px;
+  position:relative;overflow:hidden;
+}
+.question-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));
+}
+.q-text{font-size:18px;font-weight:600;color:var(--text);margin-bottom:8px;line-height:1.5}
+.q-hint{font-size:13px;color:var(--muted2);display:flex;align-items:center;gap:6px}
+ 
+.code-wrap{position:relative;margin:16px 0}
+.code-block{
+  display:block;font-family:'Fira Code',monospace;
+  background:#050710;border:1px solid var(--border2);
+  border-radius:14px;padding:22px 20px;
+  font-size:14px;line-height:2;color:#a5b4fc;
+  overflow-x:auto;white-space:pre;
+  animation:codeIn 0.3s ease;
+}
+@keyframes codeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.code-lang{
+  position:absolute;top:12px;right:14px;
+  font-size:10px;color:var(--muted);
+  background:rgba(255,255,255,0.05);border:1px solid var(--border);
+  border-radius:6px;padding:2px 8px;font-family:'Fira Code',monospace;
+  letter-spacing:1px;text-transform:uppercase;
+}
+ 
+.answer-row{display:flex;gap:10px;align-items:center;margin-top:16px;flex-wrap:wrap}
+.answer-input{
+  flex:1;min-width:200px;padding:16px 18px;
+  border-radius:14px;background:#0a0d1a;
+  border:1.5px solid var(--border2);color:var(--text);
+  font-size:15px;font-family:'Space Grotesk',sans-serif;
+  outline:none;transition:all 0.2s;
+}
+.answer-input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(99,102,241,0.1)}
+.answer-input.shake{animation:shake 0.4s ease;border-color:var(--red)!important}
+ 
+.btn{
+  padding:14px 22px;border-radius:12px;border:none;
+  cursor:pointer;font-size:14px;font-weight:700;
+  font-family:'Space Grotesk',sans-serif;
+  transition:all 0.2s;letter-spacing:0.3px;
+}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:white}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(99,102,241,0.4)}
+.btn-secondary{background:var(--surface2);color:var(--muted2);border:1px solid var(--border)}
+.btn-secondary:hover{color:var(--text);border-color:var(--border2)}
+.btn-easy{background:linear-gradient(135deg,#059669,#10b981);color:white}
+.btn-easy:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(16,185,129,0.3)}
+.btn-medium{background:linear-gradient(135deg,#d97706,#f59e0b);color:white}
+.btn-hard{background:linear-gradient(135deg,#dc2626,#ef4444);color:white}
+.btn:active{transform:translateY(0) scale(0.98)}
+ 
+.explain-box{
+  border-radius:12px;padding:14px 18px;margin-top:14px;
+  font-size:14px;line-height:1.6;display:none;
+  animation:explainIn 0.3s ease;
+}
+@keyframes explainIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.explain-win{background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);color:#6ee7b7}
+.explain-fail{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#fca5a5}
+ 
+.score-bar{
+  display:flex;justify-content:center;align-items:center;gap:20px;
+  margin-top:16px;font-size:14px;color:var(--muted2);
+}
+.score-val{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--accent3)}
+.streak-val{color:var(--amber);font-weight:700}
+ 
+/* RESULT SCREEN */
+.result-card{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:24px;padding:40px;text-align:center;
+  animation:resultIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  max-width:600px;margin:0 auto;
+}
+@keyframes resultIn{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}
+.result-big{font-size:5rem;display:block;margin-bottom:12px;animation:bounce 0.5s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes bounce{from{transform:scale(0) rotate(-15deg)}to{transform:scale(1) rotate(0)}}
+.result-title{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;margin-bottom:8px}
+.result-sub{font-size:14px;color:var(--muted2);margin-bottom:28px}
+ 
+/* HISTORY */
+.history-section{margin-top:24px}
+.history-section h4{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:12px}
+.history-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 16px;background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;margin-bottom:8px;font-size:14px;
+  transition:all 0.2s;animation:historyIn 0.3s ease;flex-wrap:wrap;gap:8px;
+}
+.history-row:hover{border-color:var(--border2);transform:translateX(4px)}
+@keyframes historyIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.badge-lang{background:rgba(139,92,246,0.15);color:#c084fc}
+.badge-easy{background:rgba(16,185,129,0.15);color:#6ee7b7}
+.badge-medium{background:rgba(245,158,11,0.15);color:#fcd34d}
+.badge-hard{background:rgba(239,68,68,0.15);color:#fca5a5}
+ 
+/* PROFILE */
+.profile-hero{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:20px;padding:28px;margin-bottom:20px;
+  display:flex;align-items:center;gap:24px;
+}
+.profile-avatar-big{
+  width:80px;height:80px;border-radius:20px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:2.5rem;flex-shrink:0;
+  border:2px solid rgba(99,102,241,0.3);
+  cursor:pointer;transition:all 0.2s;
+}
+.profile-avatar-big:hover{transform:scale(1.05);border-color:var(--accent)}
+.profile-hero-info .ph-name{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;margin-bottom:4px}
+.profile-hero-info .ph-bio{font-size:14px;color:var(--muted2);margin-bottom:10px;line-height:1.5}
+.rank-badge-display{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:20px;font-size:13px;font-weight:700;
+}
+ 
+/* ACHIEVEMENTS */
+.ach-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.ach-item{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:18px;text-align:center;transition:all 0.2s;
+}
+.ach-item:hover{border-color:var(--border2);transform:translateY(-3px)}
+.ach-item.locked{opacity:0.3}
+.ach-icon{font-size:2rem;margin-bottom:8px}
+.ach-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.ach-desc{font-size:11px;color:var(--muted)}
+ 
+/* XP BAR */
+.xp-widget{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:16px;margin-bottom:20px;
+}
+.xp-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px}
+.xp-track{height:6px;background:rgba(255,255,255,0.06);border-radius:10px;overflow:hidden}
+.xp-fill{height:6px;background:linear-gradient(90deg,var(--amber),var(--accent3));border-radius:10px;transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1)}
+ 
+/* DIVIDER */
+.divider{border:0;border-top:1px solid var(--border);margin:20px 0}
+ 
+/* FORM */
+.form-group{margin-bottom:18px}
+.form-label{font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:block}
+.form-input{
+  width:100%;padding:14px 16px;border-radius:12px;
+  background:#0a0d1a;border:1.5px solid var(--border2);
+  color:var(--text);font-size:15px;font-family:'Space Grotesk',sans-serif;
+  outline:none;transition:all 0.2s;
+}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,0.1)}
+textarea.form-input{resize:vertical;min-height:80px}
+select.form-input{cursor:pointer;appearance:none}
+ 
+.emoji-picker{display:flex;flex-wrap:wrap;gap:8px;padding:14px;background:#0a0d1a;border-radius:12px;border:1px solid var(--border)}
+.emoji-opt{font-size:1.5rem;cursor:pointer;padding:6px;border-radius:8px;transition:all 0.15s;border:2px solid transparent}
+.emoji-opt:hover{background:rgba(255,255,255,0.06);transform:scale(1.15)}
+.emoji-opt.selected{border-color:var(--accent);background:rgba(99,102,241,0.1)}
+.color-picker{display:flex;gap:8px;flex-wrap:wrap}
+.color-opt{width:36px;height:36px;border-radius:10px;cursor:pointer;border:3px solid transparent;transition:all 0.15s}
+.color-opt:hover{transform:scale(1.1)}
+.color-opt.selected{border-color:white;box-shadow:0 0 0 4px rgba(255,255,255,0.15)}
+ 
+/* TOAST */
+#toast-container{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{
+  padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;
+  min-width:220px;max-width:300px;
+  display:flex;align-items:center;gap:10px;
+  animation:toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events:all;box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  backdrop-filter:blur(10px);font-family:'Space Grotesk',sans-serif;
+}
+.toast.error{background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#fca5a5}
+.toast.success{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7}
+.toast.info{background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc}
+.toast.hide{animation:toastOut 0.25s ease forwards}
+@keyframes toastIn{from{opacity:0;transform:translateX(50px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(50px)}}
+ 
+/* CONFETTI */
+.confetti-dot{position:fixed;width:7px;height:7px;border-radius:2px;animation:confettiFall 1.6s ease-in forwards;pointer-events:none;z-index:9999}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(800deg);opacity:0}}
+ 
+/* PARTICLES */
+.particle{position:fixed;border-radius:50%;animation:floatP linear infinite;pointer-events:none;z-index:0}
+@keyframes floatP{0%{transform:translateY(100vh);opacity:0}10%{opacity:1}90%{opacity:0.6}100%{transform:translateY(-40px);opacity:0}}
+ 
+/* ANIMATIONS */
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+ 
+.hidden{display:none!important}
+ 
+/* MOBILE TOGGLE */
+#sidebar-toggle{display:none;position:fixed;top:12px;left:12px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 10px;cursor:pointer;font-size:18px}
+ 
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  #sidebar-toggle{display:flex}
+  .diff-grid,.stats-grid,.ach-grid{grid-template-columns:1fr 1fr}
+  .lang-page-tabs{flex-wrap:wrap}
+  .lpt{flex:unset;min-width:calc(50% - 4px)}
+  #auth-page{margin-left:0}
+}
+</style>
+</head>
+<body>
+ 
+<div id="toast-container"></div>
+<div id="sidebar-toggle" onclick="toggleSidebar()">☰</div>
+ 
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">🐞 Bug Hunt</div>
+    <div class="logo-sub">Time Challenge · v2.0</div>
+  </div>
+ 
+  <div class="sidebar-user" onclick="showPage('profile')" id="sidebar-user-block" style="display:none">
+    <div class="user-avatar" id="sb-avatar">?</div>
+    <div class="user-info">
+      <div class="user-name" id="sb-username">—</div>
+      <div class="user-rank" id="sb-rank">🌱 Новичок</div>
+    </div>
+  </div>
+ 
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Меню</div>
+      <div class="nav-item active" id="nav-play" onclick="showPage('menu')">
+        <span class="nav-icon">▶</span> Играть
+      </div>
+      <div class="nav-item" id="nav-profile" onclick="showPage('profile')">
+        <span class="nav-icon">👤</span> Профиль
+      </div>
+      <div class="nav-item" id="nav-history" onclick="showPage('history')">
+        <span class="nav-icon">📜</span> История
+        <span class="nav-badge" id="nav-history-count">0</span>
+      </div>
+      <div class="nav-item" id="nav-achievements" onclick="showPage('achievements')">
+        <span class="nav-icon">🏅</span> Достижения
+      </div>
+    </div>
+ 
+    <div class="nav-section">
+      <div class="nav-section-label">Языки</div>
+      <div class="lang-nav-item" id="lnav-python" onclick="selectLangAndPlay('python')">
+        <div class="lang-dot dot-python"></div>
+        🐍 Python
+      </div>
+      <div class="lang-nav-item" id="lnav-java" onclick="selectLangAndPlay('java')">
+        <div class="lang-dot dot-java"></div>
+        ☕ Java
+      </div>
+      <div class="lang-nav-item" id="lnav-js" onclick="selectLangAndPlay('js')">
+        <div class="lang-dot dot-js"></div>
+        ⚡ JavaScript
+      </div>
+      <div class="lang-nav-item" id="lnav-cpp" onclick="selectLangAndPlay('cpp')">
+        <div class="lang-dot dot-cpp"></div>
+        ⚙️ C++
+      </div>
+      <div class="lang-nav-item" id="lnav-csharp" onclick="selectLangAndPlay('csharp')">
+        <div class="lang-dot dot-csharp"></div>
+        💠 C#
+      </div>
+    </div>
+  </nav>
+ 
+  <div class="sidebar-stats" id="sidebar-stats" style="display:none">
+    <div class="sb-stat"><div class="sv" id="sb-games">0</div><div class="sl">Игр</div></div>
+    <div class="sb-stat"><div class="sv" id="sb-best">0</div><div class="sl">Рекорд</div></div>
+  </div>
+</div>
+ 
+<!-- MAIN -->
+<div id="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">🐞 Bug Hunt</div>
+      <div class="auth-subtitle">Найди баг · Time Challenge</div>
+      <label class="auth-label">Твой никнейм</label>
+      <input type="text" class="auth-input" id="username-input" placeholder="Введи никнейм..." maxlength="20">
+      <button class="auth-btn" onclick="login()">🚀 Начать обучение</button>
+    </div>
+  </div>
+ 
+<div id="main">
+ 
+  <!-- TOPBAR -->
+  <div id="topbar" style="display:none">
+    <div class="topbar-title" id="topbar-title">Главное меню</div>
+    <div class="topbar-right">
+      <div class="xp-chip" id="xp-chip">⭐ 0 XP</div>
+      <div class="streak-chip" id="streak-chip">🔥 0 серия</div>
+    </div>
+  </div>
+ 
+  <!-- MENU PAGE -->
+  <div id="menu-page" class="page">
+    <div class="page-heading" id="menu-greeting">Привет! 👋</div>
+    <div class="page-desc">Выбери язык программирования и уровень сложности. Найди баг за отведённое время!</div>
+ 
+    <!-- LANGUAGE TABS -->
+    <div class="lang-page-tabs" id="lang-tabs">
+      <div class="lpt active-python" id="lpt-python" onclick="selectLang('python')">🐍 Python</div>
+      <div class="lpt" id="lpt-java" onclick="selectLang('java')">☕ Java</div>
+      <div class="lpt" id="lpt-js" onclick="selectLang('js')">⚡ JS</div>
+      <div class="lpt" id="lpt-cpp" onclick="selectLang('cpp')">⚙️ C++</div>
+      <div class="lpt" id="lpt-csharp" onclick="selectLang('csharp')">💠 C#</div>
+    </div>
+ 
+    <!-- LANG INFO -->
+    <div class="lang-info-card" id="lang-info-card">
+      <div class="lang-big-icon" id="lic-icon">🐍</div>
+      <div class="lang-info">
+        <h3 id="lic-name">Python</h3>
+        <p id="lic-desc">Динамическая типизация, вопросы о типах данных, итераторах и ООП</p>
+        <span class="lang-played-badge" id="lic-badge" style="display:none"></span>
+      </div>
+    </div>
+ 
+    <!-- DIFFICULTY -->
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:1.5px">Уровень сложности</div>
+    <div class="diff-grid">
+      <div class="diff-card easy" onclick="startGame('easy')">
+        <span class="diff-icon">🌱</span>
+        <div class="diff-name">Лёгкий</div>
+        <div class="diff-desc">Простые баги, базовые концепции языка</div>
+        <div class="diff-stars" style="color:var(--green)">★☆☆</div>
+        <div class="diff-timer">⏱ 60 секунд</div>
+      </div>
+      <div class="diff-card medium" onclick="startGame('medium')">
+        <span class="diff-icon">⚡</span>
+        <div class="diff-name">Средний</div>
+        <div class="diff-desc">Логика, нюансы и тонкости языка</div>
+        <div class="diff-stars" style="color:var(--amber)">★★☆</div>
+        <div class="diff-timer">⏱ 45 секунд</div>
+      </div>
+      <div class="diff-card hard" onclick="startGame('hard')">
+        <span class="diff-icon">🔥</span>
+        <div class="diff-name">Сложный</div>
+        <div class="diff-desc">Edge cases, продвинутые механики</div>
+        <div class="diff-stars" style="color:var(--red)">★★★</div>
+        <div class="diff-timer">⏱ 30 секунд</div>
+      </div>
+    </div>
+ 
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card"><div class="s-label">Игр сыграно</div><div class="s-value" id="m-games">0</div></div>
+      <div class="stat-card"><div class="s-label">Правильных</div><div class="s-value" id="m-correct">0</div></div>
+      <div class="stat-card"><div class="s-label">Лучший счёт</div><div class="s-value" id="m-best">0</div></div>
+    </div>
+ 
+    <!-- XP BAR -->
+    <div class="xp-widget">
+      <div class="xp-top">
+        <span style="color:var(--muted2)" id="xp-rank-label">🌱 Новичок</span>
+        <span style="color:var(--muted)" id="xp-text">0 / 50 XP</span>
+      </div>
+      <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+ 
+  <!-- GAME PAGE -->
+  <div id="game-page" class="page">
+    <div class="game-header">
+      <div>
+        <div class="game-title" id="q-number">Вопрос 1 / 10</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px" id="g-lang-label"></div>
+      </div>
+      <div class="timer-display">
+        <span style="font-size:13px;color:var(--muted)">⏱</span>
+        <span class="timer-num" id="timer">60</span>
+        <span style="font-size:13px;color:var(--muted)">сек</span>
+      </div>
+    </div>
+ 
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+ 
+    <div class="question-card">
+      <div class="q-text" id="q-text"></div>
+      <div class="q-hint" id="q-hint"><span>💡</span><span id="q-hint-text"></span></div>
+ 
+      <div class="code-wrap">
+        <code class="code-block" id="code-block"></code>
+        <span class="code-lang" id="code-lang-badge">Python</span>
+      </div>
+ 
+      <div class="answer-row">
+        <input type="text" class="answer-input" id="answer-input" placeholder="Введи ответ...">
+        <button class="btn btn-primary" onclick="checkAnswer()">✅ Проверить</button>
+        <button class="btn btn-secondary" onclick="skipQuestion()">⏭ Пропустить</button>
+      </div>
+ 
+      <div class="explain-box" id="explain-box"></div>
+ 
+      <div class="score-bar">
+        Счёт: <span class="score-val" id="cur-score">0</span>
+        &nbsp;·&nbsp;
+        Серия: <span class="streak-val" id="cur-streak">0🔥</span>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- WIN PAGE -->
+  <div id="win-page" class="page">
+    <div class="result-card">
+      <span class="result-big">🏆</span>
+      <div class="result-title">Раунд завершён!</div>
+      <div class="result-sub" id="win-sub"></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="s-label">Правильно</div><div class="s-value" id="r-correct">0</div></div>
+        <div class="stat-card"><div class="s-label">Пропущено</div><div class="s-value" id="r-skipped">0</div></div>
+        <div class="stat-card"><div class="s-label">Очки</div><div class="s-value" id="r-score">0</div></div>
+      </div>
+      <hr class="divider">
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="showPage('menu')">🏠 Меню</button>
+        <button class="btn btn-primary" onclick="restartGame()">🔄 Ещё раз</button>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- FAIL PAGE -->
+  <div id="fail-page" class="page">
+    <div class="result-card">
+      <span class="result-big">⏰</span>
+      <div class="result-title">Время вышло!</div>
+      <div class="result-sub" id="fail-answer" style="margin-bottom:8px"></div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:24px">Правильный ответ указан выше</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="s-label">Правильно</div><div class="s-value" id="f-correct">0</div></div>
+        <div class="stat-card"><div class="s-label">Вопрос №</div><div class="s-value" id="f-question">0</div></div>
+        <div class="stat-card"><div class="s-label">Очки</div><div class="s-value" id="f-score">0</div></div>
+      </div>
+      <hr class="divider">
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="showPage('menu')">🏠 Меню</button>
+        <button class="btn btn-primary" onclick="restartGame()">🔄 Снова</button>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- HISTORY PAGE -->
+  <div id="history-page" class="page">
+    <div class="page-heading">История игр 📜</div>
+    <div class="page-desc">Все твои прошедшие партии. Учись на ошибках!</div>
+    <div id="history-list-main"></div>
+  </div>
+ 
+  <!-- ACHIEVEMENTS PAGE -->
+  <div id="achievements-page" class="page">
+    <div class="page-heading">Достижения 🏅</div>
+    <div class="page-desc">Выполняй задания и открывай новые награды</div>
+    <div class="ach-grid" id="ach-grid"></div>
+  </div>
+ 
+  <!-- PROFILE PAGE -->
+  <div id="profile-page" class="page">
+    <div class="page-heading">Профиль 👤</div>
+ 
+    <!-- HERO -->
+    <div class="profile-hero">
+      <div class="profile-avatar-big" id="p-avatar" onclick="document.getElementById('profile-edit-section').style.display='block'">?</div>
+      <div class="profile-hero-info" style="flex:1">
+        <div class="ph-name" id="p-username">—</div>
+        <div class="ph-bio" id="p-bio">Нет описания</div>
+        <span class="rank-badge-display" id="p-rank"></span>
+        <div style="margin-top:12px">
+          <button class="btn btn-primary" onclick="document.getElementById('profile-edit-section').style.display='block'" style="font-size:13px;padding:10px 18px">✏️ Редактировать</button>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- LANG STATS -->
+    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+      <div class="stat-card"><div class="s-label">Игр всего</div><div class="s-value" id="ps-games">0</div></div>
+      <div class="stat-card"><div class="s-label">Верных</div><div class="s-value" id="ps-correct">0</div></div>
+      <div class="stat-card"><div class="s-label">Рекорд</div><div class="s-value" id="ps-best">0</div></div>
+      <div class="stat-card"><div class="s-label">🐍 Python</div><div class="s-value" id="ps-python">0</div></div>
+      <div class="stat-card"><div class="s-label">☕ Java</div><div class="s-value" id="ps-java">0</div></div>
+      <div class="stat-card"><div class="s-label">⚡ JS</div><div class="s-value" id="ps-js">0</div></div>
+      <div class="stat-card"><div class="s-label">⚙️ C++</div><div class="s-value" id="ps-cpp">0</div></div>
+      <div class="stat-card"><div class="s-label">💠 C#</div><div class="s-value" id="ps-csharp">0</div></div>
+      <div class="stat-card"><div class="s-label">Макс серия</div><div class="s-value" id="ps-streak">0</div></div>
+    </div>
+ 
+    <!-- EDIT FORM -->
+    <div id="profile-edit-section">
+      <hr class="divider">
+      <div class="page-heading" style="font-size:1.3rem;margin-bottom:16px">Редактировать</div>
+      <div class="form-group">
+        <label class="form-label">Никнейм</label>
+        <input type="text" class="form-input" id="edit-username" maxlength="20">
+      </div>
+      <div class="form-group">
+        <label class="form-label">О себе</label>
+        <textarea class="form-input" id="edit-bio" maxlength="120" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Аватар (эмодзи)</label>
+        <div class="emoji-picker" id="emoji-picker"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Цвет аватара</label>
+        <div class="color-picker" id="color-picker"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Любимый язык</label>
+        <select class="form-input" id="edit-fav-lang">
+          <option value="">— не указан —</option>
+          <option value="python">🐍 Python</option>
+          <option value="java">☕ Java</option>
+          <option value="js">⚡ JavaScript</option>
+          <option value="cpp">⚙️ C++</option>
+          <option value="csharp">💠 C#</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="saveProfile()">💾 Сохранить</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('profile-edit-section').style.display='none'">Отмена</button>
+      </div>
+    </div>
+
+    <!-- LOGOUT BUTTON -->
+    <div style="text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--border)">
+      <button class="btn btn-secondary" onclick="logout()" style="width:100%;max-width:300px">🚪 Выход из аккаунта</button>
+    </div>
+  </div>
+ 
+</div><!-- /main -->
+ 
+<script>
+// ─── QUESTIONS ───────────────────────────────
+const QUESTIONS = {
+  python:{
+    easy:[
+      {q:"Что выведет этот код?",hint:"Внимательно на тип данных",code:`x = "5"\ny = 3\nprint(x + y)`,answer:["typeerror","ошибка","error"],explain:"TypeError — нельзя складывать строку и число"},
+      {q:"Что выведет код?",hint:"Подумай об операторе ==",code:`a = 10\nb = "10"\nif a == b:\n    print("равны")\nelse:\n    print("не равны")`,answer:["не равны"],explain:"int и str не равны при сравнении =="},
+      {q:"Найди баг: что не так с циклом?",hint:"Будет ли он когда-нибудь остановлен?",code:`i = 0\nwhile i < 5:\n    print(i)\n    i = i  # bug here`,answer:["бесконечный цикл","infinite loop","i не меняется"],explain:"i = i не изменяет переменную → бесконечный цикл"},
+      {q:"Что выведет этот код?",hint:"Как работает целочисленное деление",code:`print(10 // 3)`,answer:["3"],explain:"// — целочисленное деление, дробная часть отбрасывается"},
+      {q:"Найди баг: что не так?",hint:"Переменные в Python — регистрозависимые",code:`Name = "Alice"\nprint(name)`,answer:["nameerror","ошибка","error"],explain:"NameError — name и Name это разные переменные"},
+      {q:"Что произойдёт?",hint:"Деление на ноль",code:`x = 10\ny = 0\nprint(x / y)`,answer:["zerodivisionerror","ошибка деления","error"],explain:"ZeroDivisionError — деление на ноль"},
+      {q:"Что выведет код?",hint:"Порядок операций",code:`print(10 - 3 * 2)`,answer:["4"],explain:"Умножение раньше вычитания: 10 - 6 = 4"},
+      {q:"Что произойдёт?",hint:"Индексация в Python",code:`fruits = ["apple", "banana", "cherry"]\nprint(fruits[3])`,answer:["indexerror","ошибка","error"],explain:"IndexError — индекс 3 выходит за пределы (0-2)"},
+      {q:"Что выведет код?",hint:"Значение по умолчанию",code:`def say_hi(name="мир"):\n    print(f"Привет, {name}!")\n\nsay_hi()`,answer:["привет, мир!","привет, мир"],explain:"Используется значение по умолчанию 'мир'"},
+      {q:"Найди ошибку",hint:"Следи за отступами",code:`def add(a, b):\n    result = a + b\nreturn result\n\nprint(add(2, 3))`,answer:["indentationerror","ошибка отступа","error"],explain:"IndentationError — return вне функции"}
+    ],
+    medium:[
+      {q:"Что вернёт функция?",hint:"Изменяемые аргументы по умолчанию",code:`def append_item(item, lst=[]):\n    lst.append(item)\n    return lst\n\nprint(append_item(1))\nprint(append_item(2))`,answer:["[1, 2]","[1,2]"],explain:"Список по умолчанию создаётся ОДИН раз — классический питон-баг"},
+      {q:"Что выведет код?",hint:"Как Python обрабатывает деление",code:`result = 7 / 2\nprint(type(result))`,answer:["<class 'float'>","float","class float"],explain:"В Python 3 оператор / всегда возвращает float"},
+      {q:"Найди баг: почему строка не изменяется?",hint:"Строки — иммутабельны",code:`name = "hello"\nname[0] = "H"\nprint(name)`,answer:["typeerror","error","ошибка"],explain:"Строки в Python неизменяемы"},
+      {q:"Что произойдёт?",hint:"Рекурсия без базового случая",code:`def countdown(n):\n    print(n)\n    countdown(n - 1)\n\ncountdown(3)`,answer:["recursionerror","recursion error","ошибка рекурсии"],explain:"RecursionError — нет условия остановки"},
+      {q:"Что выведет этот код?",hint:"Операторы is и == — разные вещи",code:`a = [1, 2, 3]\nb = [1, 2, 3]\nprint(a is b)`,answer:["false","ложь"],explain:"is проверяет идентичность объектов → False"},
+      {q:"Что выведет код?",hint:"Как работает срез строки",code:`s = "Python"\nprint(s[1:4])`,answer:["yth"],explain:"Срез [1:4] берёт символы с 1 до 3: 'yth'"},
+      {q:"Что вернёт функция?",hint:"Разница len() и индекса",code:`data = [10, 20, 30, 40]\nprint(data[len(data)])`,answer:["indexerror","ошибка","error"],explain:"len=4, последний индекс=3 → IndexError"},
+      {q:"Найди баг: что не так?",hint:"Глобальные переменные",code:`count = 0\n\ndef increment():\n    count += 1\n\nincrement()\nprint(count)`,answer:["unboundlocalerror","ошибка","error"],explain:"UnboundLocalError — нужно 'global count'"},
+      {q:"Что выведет этот код?",hint:"Булевы значения в арифметике",code:`print(True + True + False)`,answer:["2"],explain:"True=1, False=0: 1+1+0=2"},
+      {q:"Что выведет код?",hint:"Метод sort() возвращает...",code:`nums = [3, 1, 4, 1, 5]\nnew = nums.sort()\nprint(new)`,answer:["none"],explain:"sort() сортирует на месте и возвращает None"}
+    ],
+    hard:[
+      {q:"Что выведет код и почему?",hint:"Замыкания и переменные в циклах",code:`funcs = []\nfor i in range(3):\n    funcs.append(lambda: i)\n\nprint([f() for f in funcs])`,answer:["[2, 2, 2]","[2,2,2]"],explain:"Все лямбды захватывают одну переменную i, её финальное значение = 2"},
+      {q:"Каков результат операции?",hint:"Приоритет операторов в Python",code:`print(2 ** 3 ** 2)`,answer:["512"],explain:"** правоассоциативен: 3**2=9, 2**9=512"},
+      {q:"Что вернёт функция?",hint:"None возвращается неявно",code:`def greet(name):\n    if name:\n        return f"Hi, {name}"\n\nresult = greet("")\nprint(result is None)`,answer:["true","истина"],explain:"Пустая строка falsy → ветка if не выполняется → None"},
+      {q:"Что выведет этот код?",hint:"Мутабельность и копирование списков",code:`a = [[1, 2], [3, 4]]\nb = a.copy()\nb[0][0] = 99\nprint(a[0][0])`,answer:["99"],explain:"copy() — поверхностная копия, вложенные списки разделяются"},
+      {q:"Что произойдёт?",hint:"Генераторы и их состояние",code:`def gen():\n    yield 1\n    yield 2\n\ng = gen()\nprint(next(g))\nprint(next(g))\nprint(next(g))`,answer:["stopiteration","stop iteration","ошибка"],explain:"StopIteration — генератор исчерпан после двух yield"},
+      {q:"Что выведет код?",hint:"Декораторы меняют функцию",code:`def decorator(func):\n    def wrapper():\n        return func() * 2\n    return wrapper\n\n@decorator\ndef get_five():\n    return 5\n\nprint(get_five())`,answer:["10"],explain:"Декоратор: get_five() → wrapper() → 5 * 2 = 10"},
+      {q:"Что вернёт выражение?",hint:"Цепочка сравнений",code:`print(1 < 2 < 3 < 1)`,answer:["false","ложь"],explain:"1<2 ✓, 2<3 ✓, 3<1 ✗ → False"},
+      {q:"Найди баг: что не так с классом?",hint:"Первый аргумент метода класса",code:`class Dog:\n    def bark(name):\n        print(f"{name} says woof!")\n\nd = Dog()\nd.bark()`,answer:["typeerror","ошибка","error"],explain:"TypeError — метод должен принимать self как первый аргумент"},
+      {q:"Что выведет этот код?",hint:"Как Python обрабатывает множества",code:`s = {1, 2, 3, 2, 1}\nprint(len(s))`,answer:["3"],explain:"Множество хранит уникальные: {1,2,3} → len=3"},
+      {q:"Что произойдёт?",hint:"Порядок исключений в except",code:`try:\n    x = 1 / 0\nexcept Exception:\n    print("Exception")\nexcept ZeroDivisionError:\n    print("ZeroDivision")`,answer:["exception"],explain:"Exception перехватывает первым — ZeroDivisionError не достигается"},
+      {q:"Что выведет код?",hint:"__slots__ и атрибуты",code:`class Dog:\n    __slots__ = ['name']\n\nd = Dog()\nd.name = "Rex"\nd.age = 3\nprint(d.name)`,answer:["attributeerror","ошибка","error"],explain:"__slots__ запрещает добавление произвольных атрибутов → AttributeError при d.age = 3"},
+      {q:"Что выведет код?",hint:"Метакласс type",code:`class Meta(type):\n    def __new__(mcs, name, bases, ns):\n        ns['greeting'] = 'hello'\n        return super().__new__(mcs, name, bases, ns)\n\nclass MyClass(metaclass=Meta):\n    pass\n\nprint(MyClass.greeting)`,answer:["hello"],explain:"Метакласс добавляет атрибут 'greeting' при создании класса → 'hello'"},
+      {q:"Что вернёт выражение?",hint:"Walrus-оператор",code:`data = [1, 2, 3, 4, 5]\nif (n := len(data)) > 3:\n    print(n)`,answer:["5"],explain:":= (walrus) присваивает len(data)=5 в n и использует его в условии"},
+      {q:"Что выведет код?",hint:"dataclass и __post_init__",code:`from dataclasses import dataclass\n@dataclass\nclass Rect:\n    w: int\n    h: int\n    area: int = 0\n    def __post_init__(self):\n        self.area = self.w * self.h\n\nr = Rect(4, 5)\nprint(r.area)`,answer:["20"],explain:"__post_init__ вызывается после __init__: area = 4 * 5 = 20"},
+      {q:"Что произойдёт?",hint:"contextlib.suppress",code:`from contextlib import suppress\nwith suppress(ZeroDivisionError):\n    x = 1 / 0\nprint("ok")`,answer:["ok"],explain:"suppress молча подавляет указанное исключение → выводится 'ok'"}
+    ]
+  },
+  java:{
+    easy:[
+      {q:"Что произойдёт при компиляции?",hint:"Java строго типизирован",code:`int x = "hello";\nSystem.out.println(x);`,answer:["ошибка компиляции","compilation error","error","incompatible types"],explain:"Compilation error: incompatible types — нельзя присвоить String переменной int"},
+      {q:"Что выведет код?",hint:"Целочисленное деление в Java",code:`int a = 7;\nint b = 2;\nSystem.out.println(a / b);`,answer:["3"],explain:"Деление двух int отбрасывает дробную часть: 7/2 = 3"},
+      {q:"Что произойдёт?",hint:"Null pointer",code:`String s = null;\nSystem.out.println(s.length());`,answer:["nullpointerexception","npe","null pointer","ошибка"],explain:"NullPointerException — нельзя вызывать методы на null-объекте"},
+      {q:"Что выведет код?",hint:"Разница == и equals для строк",code:`String a = new String("hi");\nString b = new String("hi");\nSystem.out.println(a == b);`,answer:["false"],explain:"== сравнивает ссылки, не значения. Для строк нужно .equals()"},
+      {q:"Что выведет этот код?",hint:"Тип данных char",code:`char c = 'A';\nSystem.out.println(c + 1);`,answer:["66"],explain:"char + int даёт int. 'A' = 65, 65 + 1 = 66"},
+      {q:"Найди баг: что не так?",hint:"Индексы массивов",code:`int[] arr = {1, 2, 3};\nSystem.out.println(arr[3]);`,answer:["arrayindexoutofboundsexception","arrayindexoutofbounds","error","ошибка"],explain:"ArrayIndexOutOfBoundsException — индекс 3, но размер массива 3 (0-2)"},
+      {q:"Что выведет код?",hint:"Приоритет операторов",code:`int x = 5;\nSystem.out.println(x++ + ++x);`,answer:["12"],explain:"x++ = 5 (потом x=6), ++x = 7; 5+7 = 12"},
+      {q:"Что произойдёт?",hint:"Деление на ноль в Java",code:`int a = 10;\nint b = 0;\nSystem.out.println(a / b);`,answer:["arithmeticexception","arithmetic exception","error","ошибка"],explain:"ArithmeticException: / by zero при делении int на 0"},
+      {q:"Что выведет код?",hint:"Логические операторы",code:`boolean a = true;\nboolean b = false;\nSystem.out.println(a && b || true);`,answer:["true"],explain:"&& имеет приоритет выше ||: (true&&false)||true = false||true = true"},
+      {q:"Что выведет код?",hint:"Конкатенация строк",code:`int a = 1;\nint b = 2;\nSystem.out.println("Sum: " + a + b);`,answer:["sum: 12","sum:12"],explain:"Строка + 1 + 2 = конкатенация слева направо: \"Sum: 12\""}
+    ],
+    medium:[
+      {q:"Что выведет код?",hint:"Переполнение int",code:`int max = Integer.MAX_VALUE;\nSystem.out.println(max + 1);`,answer:["-2147483648"],explain:"Переполнение int: MAX_VALUE + 1 = MIN_VALUE = -2147483648"},
+      {q:"Что вернёт метод?",hint:"Рекурсия без стоп-условия",code:`static int fact(int n) {\n    return n * fact(n - 1);\n}\nfact(5);`,answer:["stackoverflow","stack overflow","ошибка","error"],explain:"StackOverflowError — нет базового случая, бесконечная рекурсия"},
+      {q:"Что выведет код?",hint:"Автоупаковка Integer",code:`Integer a = 127;\nInteger b = 127;\nSystem.out.println(a == b);`,answer:["true"],explain:"Integer кэширует значения от -128 до 127: a и b — один объект"},
+      {q:"Что выведет код?",hint:"Разница int и Integer",code:`Integer a = null;\nint b = a;\nSystem.out.println(b);`,answer:["nullpointerexception","npe","error","ошибка"],explain:"NullPointerException при unboxing: null нельзя преобразовать в int"},
+      {q:"Что вернёт выражение?",hint:"Тернарный оператор",code:`int x = 5;\nString res = (x > 3) ? "big" : "small";\nSystem.out.println(res);`,answer:["big"],explain:"5 > 3 = true → возвращается \"big\""},
+      {q:"Что произойдёт?",hint:"Статические методы и наследование",code:`class A {\n    static void show() { System.out.println("A"); }\n}\nclass B extends A {\n    static void show() { System.out.println("B"); }\n}\nA obj = new B();\nobj.show();`,answer:["a"],explain:"Статические методы не полиморфны — вызывается метод типа переменной A"},
+      {q:"Что выведет код?",hint:"StringBuilder vs String",code:`String s = "";\nfor (int i = 0; i < 3; i++) s += i;\nSystem.out.println(s);`,answer:["012"],explain:"Строки конкатенируются: \"\" + 0 + 1 + 2 = \"012\""},
+      {q:"Что произойдёт?",hint:"try-finally",code:`try {\n    return 1;\n} finally {\n    return 2;\n}`,answer:["2"],explain:"finally всегда выполняется, его return перезаписывает return из try"},
+      {q:"Что выведет код?",hint:"Equals для массивов",code:`int[] a = {1, 2, 3};\nint[] b = {1, 2, 3};\nSystem.out.println(a.equals(b));`,answer:["false"],explain:"a.equals(b) сравнивает ссылки как Object.equals() → false"},
+      {q:"Что выведет код?",hint:"Autoboxing и кэш Integer",code:`Integer a = 128;\nInteger b = 128;\nSystem.out.println(a == b);`,answer:["false"],explain:"128 вне кэша [-128;127]: создаются два разных объекта → false"}
+    ],
+    hard:[
+      {q:"Что выведет код?",hint:"Порядок инициализации",code:`class Test {\n    static int x = init();\n    static int init() {\n        System.out.println("init"); return 1;\n    }\n    public static void main(String[] a) {\n        System.out.println("main");\n    }\n}`,answer:["init main","init\nmain"],explain:"Статические инициализаторы выполняются до main(): сначала 'init', потом 'main'"},
+      {q:"Найди баг: что не так?",hint:"double precision",code:`double a = 0.1 + 0.2;\nif (a == 0.3)\n    System.out.println("равно");\nelse\n    System.out.println("не равно");`,answer:["не равно"],explain:"0.1+0.2 = 0.30000000000000004 из-за IEEE 754 → не равно"},
+      {q:"Что произойдёт?",hint:"Generic type erasure",code:`List<String> strings = new ArrayList<>();\nList<Integer> ints = new ArrayList<>();\nSystem.out.println(strings.getClass() == ints.getClass());`,answer:["true"],explain:"Type erasure: во время выполнения оба — просто ArrayList"},
+      {q:"Что выведет код?",hint:"String pool и intern()",code:`String a = "hello";\nString b = new String("hello").intern();\nSystem.out.println(a == b);`,answer:["true"],explain:"intern() возвращает ссылку из String pool — a и b указывают на один объект"},
+      {q:"Что выведет код?",hint:"Checked vs unchecked exceptions",code:`try {\n    throw new RuntimeException();\n} catch (Exception e) {\n    System.out.println("caught");\n} finally {\n    System.out.println("finally");\n}`,answer:["caught finally","caught\nfinally"],explain:"Оба блока выполняются: catch перехватывает, finally всегда работает"},
+      {q:"Что произойдёт?",hint:"Множественное наследование интерфейсов",code:`interface A { default void hello() { System.out.println("A"); }}\ninterface B { default void hello() { System.out.println("B"); }}\nclass C implements A, B {}`,answer:["ошибка компиляции","compilation error","error","неоднозначность"],explain:"Compile error: класс C должен переопределить hello() для разрешения конфликта"},
+      {q:"Что выведет код?",hint:"Stream и lazy evaluation",code:`Stream.of(1, 2, 3)\n    .filter(x -> { System.out.print(x); return x > 1; })\n    .findFirst();`,answer:["12","1 2"],explain:"Stream ленивый: findFirst останавливается как только находит"},
+      {q:"Что выведет код?",hint:"Volatile и видимость",code:`class Counter {\n    int count = 0;\n    void increment() { count++; }\n}`,answer:["не атомарно","race condition","не потокобезопасен","not atomic"],explain:"count++ не атомарен (read-modify-write), нужно volatile или synchronized"},
+      {q:"Что выведет?",hint:"Diamond problem в интерфейсах",code:`interface X { default int val() { return 1; }}\ninterface Y extends X { default int val() { return 2; }}\nclass Z implements X, Y {}\nnew Z().val();`,answer:["2"],explain:"Y extends X и переопределяет val() → Z наследует от Y → возвращает 2"},
+      {q:"Что произойдёт?",hint:"Checked exception в лямбде",code:`Runnable r = () -> {\n    throw new IOException();\n};`,answer:["ошибка компиляции","compilation error","error"],explain:"Runnable.run() не объявляет checked exceptions → IOException нельзя бросить"},
+      {q:"Что выведет код?",hint:"Optional и orElse",code:`Optional<String> opt = Optional.empty();\nSystem.out.println(opt.orElse("default"));`,answer:["default"],explain:"Optional.empty() → значения нет, orElse возвращает 'default'"},
+      {q:"Что выведет код?",hint:"Stream.map и collect",code:`List<Integer> nums = List.of(1, 2, 3);\nList<Integer> doubled = nums.stream()\n    .map(x -> x * 2)\n    .collect(Collectors.toList());\nSystem.out.println(doubled.get(1));`,answer:["4"],explain:"map(x -> x*2): [2,4,6], get(1) → 4"},
+      {q:"Что произойдёт?",hint:"Immutable List.of()",code:`List<String> list = List.of("a", "b");\nlist.add("c");`,answer:["unsupportedoperationexception","unsupported","error","ошибка"],explain:"List.of() возвращает неизменяемый список → UnsupportedOperationException"},
+      {q:"Что выведет код?",hint:"Record в Java 16+",code:`record Point(int x, int y) {}\nPoint p = new Point(3, 4);\nSystem.out.println(p.x() + p.y());`,answer:["7"],explain:"record автогенерирует геттеры x() и y(): 3 + 4 = 7"}
+    ]
+  },
+  js:{
+    easy:[
+      {q:"Что выведет код?",hint:"Приведение типов в JS",code:`console.log(1 + "2");`,answer:["12",'"12"'],explain:"1 + \"2\": число приводится к строке → \"12\""},
+      {q:"Что выведет код?",hint:"Typeof для null",code:`console.log(typeof null);`,answer:["object"],explain:"Исторический баг JS: typeof null === 'object'"},
+      {q:"Что выведет код?",hint:"Сравнение с приведением",code:`console.log(0 == false);`,answer:["true"],explain:"== приводит типы: false → 0, 0 == 0 → true"},
+      {q:"Что выведет код?",hint:"NaN сравнение",code:`console.log(NaN === NaN);`,answer:["false"],explain:"NaN не равен самому себе — это уникальное свойство"},
+      {q:"Что выведет код?",hint:"Hoisting",code:`console.log(x);\nvar x = 5;`,answer:["undefined"],explain:"var поднимается (hoisting), но без значения → undefined"},
+      {q:"Что выведет код?",hint:"Строгое равенство",code:`console.log("5" === 5);`,answer:["false"],explain:"=== не приводит типы: string !== number → false"},
+      {q:"Что выведет код?",hint:"Арифметика с undefined",code:`let x;\nconsole.log(x + 1);`,answer:["nan"],explain:"undefined + 1 = NaN"},
+      {q:"Что выведет код?",hint:"Тип массива",code:`console.log(typeof []);`,answer:["object"],explain:"Массивы — объекты в JS: typeof [] === 'object'"},
+      {q:"Что произойдёт?",hint:"Доступ к несуществующему свойству",code:`let obj = {};\nconsole.log(obj.name);`,answer:["undefined"],explain:"Доступ к несуществующему свойству объекта возвращает undefined"},
+      {q:"Что выведет код?",hint:"Оператор || и falsy значения",code:`console.log(0 || "default");`,answer:["default"],explain:"0 — falsy, поэтому || возвращает правый операнд: \"default\""}
+    ],
+    medium:[
+      {q:"Что выведет код?",hint:"var в цикле и setTimeout",code:`for (var i = 0; i < 3; i++) {\n    setTimeout(() => console.log(i), 0);\n}`,answer:["3 3 3","3,3,3"],explain:"var имеет функциональную область видимости, все колбэки видят финальное i=3"},
+      {q:"Что выведет код?",hint:"Falsy значения в JS",code:`console.log([] == false);`,answer:["true"],explain:"[] приводится к 0 через ToPrimitive, false → 0, 0 == 0 = true"},
+      {q:"Что выведет код?",hint:"this в стрелочных функциях",code:`const obj = {\n    name: 'Test',\n    getName: () => this.name\n};\nconsole.log(obj.getName());`,answer:["undefined"],explain:"Стрелочная функция не имеет своего this, наследует от внешнего scope"},
+      {q:"Что выведет код?",hint:"Spread и мутация",code:`const a = [1, 2, 3];\nconst b = [...a];\nb.push(4);\nconsole.log(a.length);`,answer:["3"],explain:"Spread создаёт мелкую копию — a не затрагивается: длина 3"},
+      {q:"Что выведет код?",hint:"Промисы и очередь микрозадач",code:`console.log("start");\nPromise.resolve().then(() => console.log("promise"));\nconsole.log("end");`,answer:["start end promise","start\nend\npromise"],explain:"Промисы — микрозадачи, выполняются после синхронного кода"},
+      {q:"Что выведет код?",hint:"Объекты как ключи",code:`const a = {};\nconst b = {};\nconst map = {};\nmap[a] = 1;\nmap[b] = 2;\nconsole.log(map[a]);`,answer:["2"],explain:"Объекты как ключи приводятся к строке '[object Object]', b перезаписывает a"},
+      {q:"Что выведет код?",hint:"typeof функции",code:`function foo() {}\nconsole.log(typeof foo);`,answer:["function"],explain:"Функции — особый тип: typeof function === 'function'"},
+      {q:"Найди баг: что не так?",hint:"Мутация vs переприсвоение",code:`const arr = [1, 2, 3];\narr = [4, 5, 6];\nconsole.log(arr);`,answer:["typeerror","error","ошибка"],explain:"TypeError: const нельзя переприсваивать, но мутировать содержимое можно"},
+      {q:"Что выведет код?",hint:"Деструктуризация с default",code:`const { a = 10, b = 20 } = { a: 3 };\nconsole.log(a + b);`,answer:["23"],explain:"a=3 из объекта, b=20 (default): 3+20=23"},
+      {q:"Что выведет код?",hint:"Числовые операции",code:`console.log(0.1 + 0.2 === 0.3);`,answer:["false"],explain:"0.1+0.2 = 0.30000000000000004 из-за IEEE 754 → false"}
+    ],
+    hard:[
+      {q:"Что выведет код?",hint:"Event loop и микрозадачи",code:`setTimeout(() => console.log("1"), 0);\nPromise.resolve().then(() => console.log("2"));\nconsole.log("3");`,answer:["3 2 1","3\n2\n1"],explain:"sync → microtask → macrotask: сначала 3, потом промис 2, потом timeout 1"},
+      {q:"Что выведет код?",hint:"Каррирование",code:`const add = (x) => (y) => x + y;\nconsole.log(add(2)(3));`,answer:["5"],explain:"Каррирование: add(2) возвращает функцию (y)=>2+y, вызываем с 3 → 5"},
+      {q:"Что выведет код?",hint:"Prototype chain",code:`function Animal(name) { this.name = name; }\nAnimal.prototype.speak = function() { return this.name; }\nconst a = new Animal('Cat');\nconsole.log(a.speak());`,answer:["cat"],explain:"Метод берётся из прототипа: a.speak() → this.name → 'Cat'"},
+      {q:"Найди баг: что произойдёт?",hint:"async/await и ошибки",code:`async function fail() {\n    throw new Error("oops");\n}\n\nfail();\nconsole.log("after");`,answer:["after","after (unhandled rejection)"],explain:"async функция возвращает Promise, throw создаёт rejected promise"},
+      {q:"Что выведет код?",hint:"Symbol как ключ",code:`const s = Symbol('key');\nconst obj = { [s]: 'value', key: 'other' };\nconsole.log(Object.keys(obj).length);`,answer:["1"],explain:"Symbol-ключи не попадают в Object.keys() — только 'key'"},
+      {q:"Что выведет код?",hint:"Generator и yield",code:`function* gen() {\n    yield 1;\n    yield 2;\n}\nconst g = gen();\nconsole.log(g.next().value);\nconsole.log(g.next().value);`,answer:["1 2","1\n2"],explain:"Generator возвращает значения лениво: первый next() → 1, второй → 2"},
+      {q:"Найди баг: что не так?",hint:"Circular reference",code:`const a = {};\nconst b = { ref: a };\na.ref = b;\nconsole.log(JSON.stringify(a));`,answer:["typeerror","error","circular","ошибка"],explain:"TypeError: Converting circular structure to JSON"},
+      {q:"Что выведет код?",hint:"Proxy и геттеры",code:`const p = new Proxy({}, {\n    get: (t, k) => k.split('').reverse().join('')\n});\nconsole.log(p.hello);`,answer:["olleh"],explain:"Proxy перехватывает get: 'hello' → reverse → 'olleh'"},
+      {q:"Что выведет код?",hint:"Приоритет ?? vs ||",code:`const val = 0 ?? "default";\nconsole.log(val);`,answer:["0"],explain:"?? проверяет только null/undefined, не falsy: 0 — не null → возвращает 0"},
+      {q:"Что выведет код?",hint:"Tagged template literals",code:`function tag(s) { return s[0].toUpperCase(); }\nconsole.log(tag\`hello world\`);`,answer:["hello world","HELLO WORLD"],explain:"Tagged template: s[0]='hello world', toUpperCase() → 'HELLO WORLD'"},
+      {q:"Что выведет код?",hint:"WeakMap и сборка мусора",code:`let key = {};\nconst wm = new WeakMap();\nwm.set(key, 'data');\nconsole.log(wm.has(key));`,answer:["true"],explain:"WeakMap хранит слабую ссылку: key существует → has() = true"},
+      {q:"Что выведет код?",hint:"Object.freeze",code:`const obj = Object.freeze({ x: 1 });\nobj.x = 99;\nconsole.log(obj.x);`,answer:["1"],explain:"Object.freeze(): свойства не изменяются (тихо игнорируется не в strict mode)"},
+      {q:"Что выведет код?",hint:"Promise.all",code:`Promise.all([Promise.resolve(1), Promise.resolve(2)])\n  .then(vals => console.log(vals[0] + vals[1]));`,answer:["3"],explain:"Promise.all ждёт все промисы: [1, 2], vals[0]+vals[1] = 3"},
+      {q:"Что выведет код?",hint:"globalThis",code:`const x = 'outer';\nfunction test() {\n  'use strict';\n  return this;\n}\nconsole.log(test() === undefined);`,answer:["true"],explain:"В strict mode this внутри функции = undefined, не глобальный объект"}
+    ]
+  },
+  cpp:{
+    easy:[
+      {q:"Что произойдёт?",hint:"Разница между = и ==",code:`int x = 5;\nif (x = 0) {\n    cout << "zero";\n} else {\n    cout << "not zero";\n}`,answer:["not zero"],explain:"x = 0 присваивает 0, что falsy → else-ветка"},
+      {q:"Что выведет код?",hint:"Целочисленное деление",code:`int a = 7, b = 2;\ncout << a / b;`,answer:["3"],explain:"Деление двух int: 7/2 = 3 (дробная часть обрезается)"},
+      {q:"Что произойдёт?",hint:"Выход за границы массива",code:`int arr[3] = {1, 2, 3};\ncout << arr[5];`,answer:["undefined behavior","ub","неопределённое поведение"],explain:"Выход за границы массива — undefined behavior в C++"},
+      {q:"Что выведет код?",hint:"sizeof для указателя",code:`int arr[10];\ncout << sizeof(arr) / sizeof(arr[0]);`,answer:["10"],explain:"sizeof(arr) = 40 байт, sizeof(int) = 4, 40/4 = 10"},
+      {q:"Что выведет код?",hint:"Постфиксный и префиксный инкремент",code:`int x = 5;\ncout << x++ << " " << ++x;`,answer:["5 7"],explain:"x++ = 5 (потом x=6), ++x = 7, вывод: '5 7'"},
+      {q:"Что произойдёт?",hint:"Деление на ноль",code:`int a = 10;\nint b = 0;\ncout << a / b;`,answer:["undefined behavior","ub","неопределённое поведение","crash"],explain:"Деление целого числа на ноль — undefined behavior"},
+      {q:"Что выведет код?",hint:"Булевые в cout",code:`bool a = true, b = false;\ncout << a << " " << b;`,answer:["1 0"],explain:"cout выводит bool как 0 и 1 по умолчанию"},
+      {q:"Что выведет код?",hint:"Char арифметика",code:`char c = 'A';\ncout << c + 1;`,answer:["66"],explain:"'A' = 65 в ASCII, char + int = int: 65 + 1 = 66"},
+      {q:"Найди баг: что не так?",hint:"Использование до инициализации",code:`int x;\ncout << x;`,answer:["undefined behavior","ub","мусор","garbage"],explain:"Локальная переменная без инициализации содержит мусор → UB"},
+      {q:"Что выведет код?",hint:"Оператор модуля",code:`cout << -7 % 3;`,answer:["-1"],explain:"В C++ результат % имеет знак делимого: -7 % 3 = -1"}
+    ],
+    medium:[
+      {q:"Что произойдёт?",hint:"Dangling pointer",code:`int* ptr;\n{\n    int x = 10;\n    ptr = &x;\n}\ncout << *ptr;`,answer:["undefined behavior","ub","dangling pointer","неопределённое поведение"],explain:"ptr указывает на уничтоженную переменную → dangling pointer → UB"},
+      {q:"Что выведет код?",hint:"Виртуальные функции",code:`class Animal {\npublic:\n    virtual void speak() { cout << "..."; }\n};\nclass Dog : public Animal {\npublic:\n    void speak() { cout << "Woof"; }\n};\nAnimal* a = new Dog();\na->speak();`,answer:["woof"],explain:"virtual + полиморфизм: a->speak() вызывает Dog::speak()"},
+      {q:"Что выведет код?",hint:"Копирующий конструктор",code:`vector<int> a = {1, 2, 3};\nvector<int> b = a;\nb.push_back(4);\ncout << a.size();`,answer:["3"],explain:"vector копируется по значению: a не изменяется, size = 3"},
+      {q:"Что произойдёт?",hint:"Stack overflow",code:`int factorial(int n) {\n    return n * factorial(n - 1);\n}\nfactorial(100000);`,answer:["stack overflow","stackoverflow","segfault","ошибка"],explain:"Нет базового случая → бесконечная рекурсия → stack overflow"},
+      {q:"Что выведет код?",hint:"nullptr разыменование",code:`int* p = nullptr;\ncout << *p;`,answer:["undefined behavior","ub","segfault","crash"],explain:"Разыменование nullptr — undefined behavior (обычно segfault)"},
+      {q:"Что выведет код?",hint:"auto и вычитание типов",code:`auto x = 5;\nauto y = 2.0;\ncout << x / y;`,answer:["2.5"],explain:"x — int, y — double, int/double = double: 5/2.0 = 2.5"},
+      {q:"Найди баг: что не так?",hint:"Забытый виртуальный деструктор",code:`class Base {\npublic:\n    ~Base() { cout << "Base"; }\n};\nclass Derived : public Base {\npublic:\n    ~Derived() { cout << "Derived"; }\n};\nBase* obj = new Derived();\ndelete obj;`,answer:["undefined behavior","ub","утечка","только base"],explain:"Без virtual ~Base() → ~Derived() не вызывается → UB / утечка ресурсов"},
+      {q:"Что выведет код?",hint:"Порядок оценки аргументов",code:`int i = 0;\ncout << i++ << i++;`,answer:["undefined behavior","ub"],explain:"Порядок вычисления аргументов функции не определён в C++ → UB"},
+      {q:"Что выведет код?",hint:"Ссылки и алиасы",code:`int x = 10;\nint& ref = x;\nref = 20;\ncout << x;`,answer:["20"],explain:"ref — алиас x: изменение ref изменяет x → 20"},
+      {q:"Что произойдёт?",hint:"Переполнение signed int",code:`int x = INT_MAX;\nx++;\ncout << x;`,answer:["undefined behavior","ub","переполнение"],explain:"Переполнение signed integer — undefined behavior в C++"}
+    ],
+    hard:[
+      {q:"Что выведет код?",hint:"Move semantics",code:`string a = "hello";\nstring b = move(a);\ncout << a.size();`,answer:["0"],explain:"После move a в валидном но пустом состоянии: size() = 0"},
+      {q:"Что произойдёт?",hint:"RAII и исключения",code:`unique_ptr<int> p = make_unique<int>(42);\nthrow runtime_error("oops");`,answer:["p освободится","деструктор вызовется","освободится"],explain:"unique_ptr — RAII: деструктор вызывается при раскрутке стека"},
+      {q:"Что выведет код?",hint:"Шаблоны и специализация",code:`template<typename T>\nT max(T a, T b) { return a > b ? a : b; }\ncout << max(3, 5);`,answer:["5"],explain:"max<int>(3, 5): 3 > 5 false → возвращает 5"},
+      {q:"Что выведет код?",hint:"Лямбда и замыкания",code:`int x = 10;\nauto f = [x]() mutable { x++; return x; };\ncout << f() << " " << x;`,answer:["11 10"],explain:"[x] захватывает копию: f() работает с копией, оригинал x не меняется"},
+      {q:"Что произойдёт?",hint:"Double free",code:`int* p = new int(42);\ndelete p;\ndelete p;`,answer:["undefined behavior","ub","crash","double free"],explain:"double free — undefined behavior, обычно приводит к краху"},
+      {q:"Что выведет код?",hint:"Виртуальная таблица",code:`class A {\npublic:\n    virtual void f() { cout << "A"; }\n    void g() { f(); }\n};\nclass B : public A {\npublic:\n    void f() { cout << "B"; }\n};\nB b; b.g();`,answer:["b"],explain:"g() вызывает virtual f(): благодаря vtable вызывается B::f()"},
+      {q:"Что выведет код?",hint:"constexpr вычисление",code:`constexpr int square(int n) { return n * n; }\nstatic_assert(square(5) == 25);\ncout << square(4);`,answer:["16"],explain:"constexpr вычисляется в compile-time; square(4) = 16"},
+      {q:"Что произойдёт?",hint:"Strict aliasing",code:`float f = 1.0f;\nint* p = reinterpret_cast<int*>(&f);\ncout << *p;`,answer:["undefined behavior","ub"],explain:"Нарушение strict aliasing — доступ к float через int* → UB"},
+      {q:"Что выведет код?",hint:"Оператор запятая",code:`int x = (1, 2, 3);\ncout << x;`,answer:["3"],explain:"Оператор запятая вычисляет все выражения, возвращает последнее: 3"},
+      {q:"Что произойдёт?",hint:"Ключевое слово explicit",code:`class MyInt {\npublic:\n    explicit MyInt(int v) : val(v) {}\n    int val;\n};\nMyInt x = 5;`,answer:["ошибка компиляции","compilation error","error"],explain:"explicit запрещает неявное преобразование: MyInt x = 5 → ошибка"},
+      {q:"Что выведет код?",hint:"std::optional",code:`#include <optional>\nstd::optional<int> val;\nif (!val.has_value())\n    std::cout << "empty";`,answer:["empty"],explain:"optional без значения: has_value() = false → 'empty'"},
+      {q:"Что произойдёт?",hint:"std::unique_ptr и копирование",code:`auto p1 = std::make_unique<int>(10);\nauto p2 = p1;`,answer:["ошибка компиляции","compilation error","error"],explain:"unique_ptr не копируется — только перемещается: p2 = p1 → ошибка"},
+      {q:"Что выведет код?",hint:"Fold expressions C++17",code:`template<typename... Args>\nauto sum(Args... args) { return (args + ...); }\nstd::cout << sum(1, 2, 3, 4);`,answer:["10"],explain:"Fold expression (args + ...): 1+2+3+4 = 10"},
+      {q:"Что выведет код?",hint:"structured bindings C++17",code:`std::map<int,std::string> m{{1,"one"}};\nfor (auto& [k, v] : m)\n    std::cout << k << v;`,answer:["1one"],explain:"Structured binding: k=1, v='one' → вывод '1one'"}
+    ]
+  },
+  csharp:{
+    easy:[
+      {q:"Что произойдёт?",hint:"Nullable types в C#",code:`string s = null;\nConsole.WriteLine(s.Length);`,answer:["nullreferenceexception","null reference","ошибка","error"],explain:"NullReferenceException — нельзя вызывать методы на null"},
+      {q:"Что выведет код?",hint:"Целочисленное деление",code:`int a = 7;\nint b = 2;\nConsole.WriteLine(a / b);`,answer:["3"],explain:"Деление двух int: 7/2 = 3 (дробная часть отбрасывается)"},
+      {q:"Что выведет код?",hint:"Разница == для строк",code:`string a = "hello";\nstring b = "hello";\nConsole.WriteLine(a == b);`,answer:["true"],explain:"В C# == для string сравнивает значения, не ссылки → true"},
+      {q:"Что выведет код?",hint:"Приоритет операторов",code:`Console.WriteLine(10 - 3 * 2);`,answer:["4"],explain:"Умножение раньше вычитания: 10 - 6 = 4"},
+      {q:"Что выведет код?",hint:"string.Format",code:`int x = 42;\nConsole.WriteLine($"Value: {x}");`,answer:["value: 42"],explain:"String interpolation: {x} заменяется значением переменной"},
+      {q:"Что произойдёт?",hint:"Выход за границы массива",code:`int[] arr = {1, 2, 3};\nConsole.WriteLine(arr[3]);`,answer:["indexoutofrangeexception","indexoutofrange","ошибка","error"],explain:"IndexOutOfRangeException — индекс 3 выходит за пределы (0-2)"},
+      {q:"Что выведет код?",hint:"var и вывод типа",code:`var x = 42;\nvar y = 3.14;\nConsole.WriteLine(x.GetType().Name);`,answer:["int32","int"],explain:"var выводит тип: 42 → Int32"},
+      {q:"Что выведет код?",hint:"Boolean операции",code:`bool a = true;\nbool b = false;\nConsole.WriteLine(a && b || true);`,answer:["true"],explain:"&& выше ||: (true&&false)||true = false||true = true"},
+      {q:"Найди баг: что не так?",hint:"Неверный тип",code:`int x = "42";\nConsole.WriteLine(x);`,answer:["ошибка компиляции","compilation error","error"],explain:"Нельзя присвоить string переменной типа int без приведения"},
+      {q:"Что выведет код?",hint:"Тернарный оператор",code:`int score = 85;\nstring grade = score >= 90 ? "A" : "B";\nConsole.WriteLine(grade);`,answer:["b"],explain:"85 < 90 → ложь → возвращается \"B\""}
+    ],
+    medium:[
+      {q:"Что выведет код?",hint:"Struct vs Class — value/reference",code:`struct Point { public int X; }\nPoint a = new Point { X = 5 };\nPoint b = a;\nb.X = 10;\nConsole.WriteLine(a.X);`,answer:["5"],explain:"struct — value type: b — копия, a не изменяется"},
+      {q:"Что выведет код?",hint:"Boxing и unboxing",code:`object obj = 42;\nint x = (int)obj;\nConsole.WriteLine(x);`,answer:["42"],explain:"Unboxing: значение корректно извлечено из object → 42"},
+      {q:"Что произойдёт?",hint:"InvalidCastException",code:`object obj = "hello";\nint x = (int)obj;\nConsole.WriteLine(x);`,answer:["invalidcastexception","invalid cast","ошибка","error"],explain:"InvalidCastException: string нельзя привести к int напрямую"},
+      {q:"Что выведет код?",hint:"LINQ и отложенное выполнение",code:`var nums = new[] {1, 2, 3, 4, 5};\nvar query = nums.Where(x => x > 2);\nnums[0] = 10;\nConsole.WriteLine(query.Count());`,answer:["3"],explain:"LINQ ленив: query выполняется при Count(), nums[0]=10 не влияет"},
+      {q:"Что выведет код?",hint:"Nullable int",code:`int? x = null;\nConsole.WriteLine(x ?? 42);`,answer:["42"],explain:"?? — null-coalescing: x null → возвращается 42"},
+      {q:"Что выведет код?",hint:"string неизменяем",code:`string s = "hello";\ns.Replace("hello", "world");\nConsole.WriteLine(s);`,answer:["hello"],explain:"string immutable: Replace возвращает новую строку, s не меняется"},
+      {q:"Что произойдёт?",hint:"StackOverflow",code:`static int Factorial(int n) {\n    return n * Factorial(n - 1);\n}\nFactorial(10);`,answer:["stackoverflow","stack overflow","ошибка"],explain:"StackOverflowException — нет базового случая рекурсии"},
+      {q:"Что выведет код?",hint:"is и as операторы",code:`object obj = "hello";\nConsole.WriteLine(obj is string);`,answer:["true"],explain:"is проверяет тип объекта: obj — string → true"},
+      {q:"Что выведет код?",hint:"foreach и IEnumerable",code:`var list = new List<int> {1, 2, 3};\nforeach (var item in list) {\n    Console.Write(item + " ");\n}`,answer:["1 2 3"],explain:"foreach итерирует по коллекции: выводит '1 2 3 '"},
+      {q:"Что произойдёт?",hint:"DivideByZeroException",code:`int a = 10;\nint b = 0;\nConsole.WriteLine(a / b);`,answer:["dividebyzeroexception","divide by zero","ошибка"],explain:"DivideByZeroException при делении целого числа на 0"}
+    ],
+    hard:[
+      {q:"Что выведет код?",hint:"Async/await и порядок",code:`async Task Main() {\n    Console.WriteLine("1");\n    await Task.Delay(0);\n    Console.WriteLine("3");\n}\nConsole.WriteLine("2");`,answer:["1 2 3","1\n2\n3"],explain:"await переключает контекст: 1, затем синхронный 2, затем продолжение 3"},
+      {q:"Что выведет код?",hint:"Delegate и события",code:`Func<int, int> square = x => x * x;\nConsole.WriteLine(square(5));`,answer:["25"],explain:"Лямбда через Func<int,int>: square(5) = 5*5 = 25"},
+      {q:"Что произойдёт?",hint:"Закрытая переменная в лямбде",code:`var funcs = new List<Func<int>>();\nfor (int i = 0; i < 3; i++) {\n    funcs.Add(() => i);\n}\nConsole.WriteLine(funcs[0]());`,answer:["3"],explain:"Лямбда захватывает переменную i по ссылке: после цикла i=3"},
+      {q:"Что выведет код?",hint:"Interface default methods",code:`interface IAnimal {\n    string Sound() => "...";\n}\nclass Dog : IAnimal {}\nIAnimal d = new Dog();\nConsole.WriteLine(d.Sound());`,answer:["..."],explain:"Dog не переопределяет Sound() → используется default реализация интерфейса"},
+      {q:"Что произойдёт?",hint:"Ковариантность дженериков",code:`List<string> strings = new List<string>();\nList<object> objects = strings;`,answer:["ошибка компиляции","compilation error","error"],explain:"List<T> не ковариантен: List<string> нельзя присвоить List<object>"},
+      {q:"Что выведет код?",hint:"Pattern matching",code:`object obj = 42;\nif (obj is int n && n > 10)\n    Console.WriteLine("big");\nelse\n    Console.WriteLine("other");`,answer:["big"],explain:"Pattern matching: obj — int с именем n, 42 > 10 → \"big\""},
+      {q:"Что выведет код?",hint:"using и IDisposable",code:`using var conn = new SqlConnection();\nConsole.WriteLine("connected");`,answer:["connected"],explain:"using автоматически вызовет Dispose() при выходе из блока"},
+      {q:"Что выведет код?",hint:"record vs class",code:`record Point(int X, int Y);\nvar a = new Point(1, 2);\nvar b = new Point(1, 2);\nConsole.WriteLine(a == b);`,answer:["true"],explain:"record: == сравнивает значения, не ссылки → true"},
+      {q:"Что произойдёт?",hint:"Span<T> и стек",code:`Span<int> span = stackalloc int[3];\nspan[0] = 1; span[1] = 2; span[2] = 3;\nConsole.WriteLine(span.Length);`,answer:["3"],explain:"stackalloc выделяет память на стеке, Span<T> обеспечивает доступ: Length = 3"},
+      {q:"Что выведет код?",hint:"Nullable reference types",code:`#nullable enable\nstring? s = null;\nConsole.WriteLine(s!.Length);`,answer:["nullreferenceexception","null reference","ошибка"],explain:"! подавляет предупреждение компилятора, но не проверку в runtime: NRE"},
+      {q:"Что выведет код?",hint:"IAsyncEnumerable",code:`async IAsyncEnumerable<int> GetNums() {\n    yield return 1;\n    yield return 2;\n}\n// await foreach (var n in GetNums()) Console.Write(n);`,answer:["1 2","12"],explain:"IAsyncEnumerable позволяет асинхронно итерировать: выводит 1, затем 2"},
+      {q:"Что выведет код?",hint:"init-only свойства",code:`public class Person {\n    public string Name { get; init; }\n}\nvar p = new Person { Name = "Alice" };\np.Name = "Bob";`,answer:["ошибка компиляции","compilation error","error"],explain:"init — свойство можно задать только при инициализации; последующее присваивание → ошибка"},
+      {q:"Что выведет код?",hint:"switch expression C# 8",code:`int x = 2;\nstring result = x switch {\n    1 => "one",\n    2 => "two",\n    _ => "other"\n};\nConsole.WriteLine(result);`,answer:["two"],explain:"switch expression: x=2 соответствует ветке 2 => 'two'"},
+      {q:"Что выведет код?",hint:"Span<T> и slice",code:`int[] arr = {1, 2, 3, 4, 5};\nSpan<int> span = arr.AsSpan(1, 3);\nConsole.WriteLine(span[0] + span[2]);`,answer:["6"],explain:"AsSpan(1,3): элементы [2,3,4], span[0]=2, span[2]=4 → 2+4=6"},
+      {q:"Что выведет код?",hint:"with-expression для record",code:`record Point(int X, int Y);\nvar a = new Point(1, 2);\nvar b = a with { Y = 99 };\nConsole.WriteLine(a.Y + \" \" + b.Y);`,answer:["2 99"],explain:"with создаёт копию с изменёнными полями: a.Y=2, b.Y=99"}
+    ]
+  }
+};
+ 
+const LANG_INFO = {
+  python:{icon:'🐍',name:'Python',desc:'Динамическая типизация, типы данных, итераторы, декораторы и ООП'},
+  java:{icon:'☕',name:'Java',desc:'Статическая типизация, JVM, исключения, generics и многопоточность'},
+  js:{icon:'⚡',name:'JavaScript',desc:'Прототипы, event loop, замыкания, async/await и типы в JS'},
+  cpp:{icon:'⚙️',name:'C++',desc:'Управление памятью, указатели, UB, шаблоны и move semantics'},
+  csharp:{icon:'💠',name:'C#',desc:'CLR, LINQ, async/await, generics, value/reference types'},
+};
+ 
+const ACHIEVEMENTS_DEF=[
+  {id:'first_win',icon:'🎯',name:'Первая победа',desc:'Заверши первую игру',check:s=>s.games>=1},
+  {id:'perfect',icon:'💯',name:'Идеально!',desc:'10/10 правильных ответов',check:s=>s.perfectGames>=1},
+  {id:'speed',icon:'⚡',name:'Молниеносный',desc:'Ответь за 5 секунд',check:s=>s.fastAnswers>=1},
+  {id:'hard_mode',icon:'🔥',name:'Пожарный',desc:'Победи на Hard',check:s=>s.hardWins>=1},
+  {id:'polyglot',icon:'🌍',name:'Полиглот',desc:'Играй на всех 5 языках',check:s=>s.langPlayed&&s.langPlayed.python&&s.langPlayed.java&&s.langPlayed.js&&s.langPlayed.cpp&&s.langPlayed.csharp},
+  {id:'grind',icon:'💪',name:'Труженик',desc:'Сыграй 10 игр',check:s=>s.games>=10},
+  {id:'sharp',icon:'🧠',name:'Острый ум',desc:'Набери 200+ очков',check:s=>s.best>=200},
+  {id:'cpp_master',icon:'⚙️',name:'C++ Мастер',desc:'Победи на C++ (Hard)',check:s=>s.cppHardWins>=1},
+  {id:'csharp_master',icon:'💠',name:'C# Мастер',desc:'Победи на C# (Hard)',check:s=>s.csharpHardWins>=1},
+  {id:'java_master',icon:'☕',name:'Java Мастер',desc:'Победи на Java (Hard)',check:s=>s.javaHardWins>=1},
+  {id:'js_ninja',icon:'🥷',name:'JS Ниндзя',desc:'Победи на JS (Hard)',check:s=>s.jsHardWins>=1},
+  {id:'streak5',icon:'🔥',name:'Серия x5',desc:'5 правильных подряд',check:s=>s.maxStreak>=5},
+  {id:'veteran',icon:'🎖️',name:'Ветеран',desc:'Сыграй 25 игр',check:s=>s.games>=25},
+  {id:'legend_score',icon:'👑',name:'Легенда',desc:'Набери 500+ очков за игру',check:s=>s.best>=500},
+  {id:'streak10',icon:'💥',name:'Серия x10',desc:'10 правильных подряд',check:s=>s.maxStreak>=10},
+  {id:'all_hard',icon:'🏅',name:'Мастер всего',desc:'Победи на Hard на всех 5 языках',check:s=>s.javaHardWins>=1&&s.jsHardWins>=1&&s.cppHardWins>=1&&s.csharpHardWins>=1&&s.hardWins>=1}
+];
+ 
+// ─── STATE ───────────────────────────────────
+let state={
+  username:'',lang:'python',difficulty:'easy',
+  questions:[],current:0,score:0,
+  correctCount:0,skippedCount:0,streak:0,
+  timerVal:60,timerInterval:null,history:[],
+  stats:{games:0,correct:0,best:0,perfectGames:0,fastAnswers:0,hardWins:0,
+         javaHardWins:0,jsHardWins:0,cppHardWins:0,csharpHardWins:0,
+         maxStreak:0,langPlayed:{python:false,java:false,js:false,cpp:false,csharp:false}},
+  profile:{emoji:'🐞',color:'linear-gradient(135deg,#6366f1,#8b5cf6)',bio:'',favLang:''}
+};
+const TIMER_LIMITS={easy:60,medium:45,hard:30};
+const SCORE_POINTS={easy:10,medium:20,hard:35};
+const AVATAR_EMOJIS=['🐞','👾','🦾','🤖','🐉','🦊','🐺','🐯','🦁','🐸','🦋','🐙','🚀','⚡','🔥','💎','👑','🎯','🎮','🏆','💻','🧠','⚙️','💠','🧩','🌀'];
+const AVATAR_COLORS=[
+  'linear-gradient(135deg,#6366f1,#8b5cf6)',
+  'linear-gradient(135deg,#10b981,#059669)',
+  'linear-gradient(135deg,#f59e0b,#ef4444)',
+  'linear-gradient(135deg,#c084fc,#818cf8)',
+  'linear-gradient(135deg,#f97316,#ef4444)',
+  'linear-gradient(135deg,#06b6d4,#3b82f6)',
+  'linear-gradient(135deg,#ec4899,#f43f5e)',
+  'linear-gradient(135deg,#84cc16,#22c55e)',
+];
+ 
+// ─── PARTICLES ───────────────────────────────
+(function(){
+  for(let i=0;i<12;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const sz=Math.random()*2+1;
+    p.style.cssText=`width:${sz}px;height:${sz}px;background:rgba(99,102,241,0.3);left:${Math.random()*100}vw;animation-duration:${12+Math.random()*15}s;animation-delay:${Math.random()*20}s`;
+    document.body.appendChild(p);
+  }
+})();
+ 
+// ─── TOAST ───────────────────────────────────
+function showToast(msg,type='info',dur=3000){
+  const icons={error:'✖',success:'✔',info:'ℹ'};
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>{t.classList.add('hide');setTimeout(()=>t.remove(),300)},dur);
+}
+ 
+// ─── SIDEBAR TOGGLE ───────────────────────────
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+}
+ 
+// ─── AUTH ────────────────────────────────────
+function login(){
+  const v=document.getElementById('username-input').value.trim();
+  if(!v){
+    const i=document.getElementById('username-input');
+    i.classList.add('shake');setTimeout(()=>i.classList.remove('shake'),500);
+    showToast('Введи никнейм!','error');return;
+  }
+  state.username=v;
+  localStorage.setItem('bughunt3_last_user', v);
+  loadStats();
+  document.getElementById('auth-page').style.display='none';
+  document.getElementById('main').style.display='flex';
+  document.getElementById('main').style.flexDirection='column';
+  document.getElementById('sidebar').style.display='flex';
+  document.getElementById('topbar').style.display='flex';
+  document.getElementById('sidebar-user-block').style.display='flex';
+  document.getElementById('sidebar-stats').style.display='grid';
+  showPage('menu');
+  showToast(`Добро пожаловать, ${v}! 🎉`,'success');
+}
+
+function logout(){
+  if(confirm('Ты точно хочешь выйти из аккаунта?')){
+    state.username='';
+    state.stats={};
+    state.history=[];
+    state.profile={};
+    document.getElementById('auth-page').style.display='flex';
+    document.getElementById('main').style.display='none';
+    document.getElementById('sidebar').style.display='none';
+    document.getElementById('topbar').style.display='none';
+    document.getElementById('username-input').value='';
+    document.getElementById('username-input').focus();
+    showToast('До свидания! 👋','info');
+  }
+}
+document.getElementById('username-input').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+window.addEventListener('load',()=>{
+  const input=document.getElementById('username-input');
+  input.focus();
+  const last=localStorage.getItem('bughunt3_last_user');
+  if(last){input.value=last}
+});
+ 
+// ─── SAVE/LOAD ───────────────────────────────
+function loadStats(){
+  const key='bughunt3_'+state.username;
+  const saved=localStorage.getItem(key);
+  const def={games:0,correct:0,best:0,perfectGames:0,fastAnswers:0,hardWins:0,
+    javaHardWins:0,jsHardWins:0,cppHardWins:0,csharpHardWins:0,
+    maxStreak:0,langPlayed:{python:false,java:false,js:false,cpp:false,csharp:false}};
+  if(saved){
+    let d;
+    try{d=JSON.parse(saved)}catch(e){
+      console.warn('Ошибка чтения локального хранилища, сбрасываю данные', e);
+      d=null;
+    }
+    if(d){
+      state.stats=Object.assign(def,d.stats||{});
+      state.history=d.history||[];
+      state.profile=Object.assign({emoji:'🐞',color:'linear-gradient(135deg,#6366f1,#8b5cf6)',bio:'',favLang:''},d.profile||{});
+    } else {
+      state.stats=def;state.history=[];state.profile={emoji:'🐞',color:'linear-gradient(135deg,#6366f1,#8b5cf6)',bio:'',favLang:''};
+    }
+  } else {state.stats=def;state.history=[];state.profile={emoji:'🐞',color:'linear-gradient(135deg,#6366f1,#8b5cf6)',bio:'',favLang:''}}
+  if(!state.stats.langPlayed)state.stats.langPlayed={python:false,java:false,js:false,cpp:false,csharp:false};
+}
+function saveStats(){
+  localStorage.setItem('bughunt3_'+state.username,JSON.stringify({stats:state.stats,history:state.history,profile:state.profile}));
+}
+ 
+// ─── PAGE ROUTING ────────────────────────────
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg=document.getElementById(id+'-page');
+  if(pg){pg.classList.add('active')}
+  const ni=document.getElementById('nav-'+id);
+  if(ni)ni.classList.add('active');
+  const titles={menu:'Главное меню',profile:'Профиль',history:'История игр',achievements:'Достижения',game:'Игра',win:'Результат',fail:'Время вышло'};
+  document.getElementById('topbar-title').textContent=titles[id]||'Bug Hunt';
+  if(id==='menu')renderMenu();
+  if(id==='profile')renderProfile();
+  if(id==='history')renderHistoryPage();
+  if(id==='achievements')renderAchievements();
+  updateSidebar();
+  if(window.innerWidth<=768)document.getElementById('sidebar').classList.remove('open');
+}
+ 
+// ─── SIDEBAR UPDATE ───────────────────────────
+function updateSidebar(){
+  const sb=document.getElementById('sb-avatar');
+  sb.textContent=state.profile.emoji||state.username[0]?.toUpperCase()||'?';
+  sb.style.background=state.profile.color;
+  document.getElementById('sb-username').textContent=state.username;
+  document.getElementById('sb-rank').textContent=getRank(state.stats.best).icon+' '+getRank(state.stats.best).name;
+  document.getElementById('sb-games').textContent=state.stats.games;
+  document.getElementById('sb-best').textContent=state.stats.best;
+  document.getElementById('nav-history-count').textContent=state.history.length;
+  updateTopbar();
+  updateLangNav();
+}
+function updateTopbar(){
+  document.getElementById('xp-chip').textContent='⭐ '+state.stats.best+' XP';
+  document.getElementById('streak-chip').textContent='🔥 '+(state.stats.maxStreak||0)+' серия';
+}
+function updateLangNav(){
+  ['python','java','js','cpp','csharp'].forEach(l=>{
+    const el=document.getElementById('lnav-'+l);
+    el.className='lang-nav-item';
+    if(l===state.lang)el.classList.add('active-'+l);
+  });
+}
+ 
+// ─── MENU ────────────────────────────────────
+function renderMenu(){
+  document.getElementById('menu-greeting').textContent=`Привет, ${state.username}! 👋`;
+  document.getElementById('m-games').textContent=state.stats.games;
+  document.getElementById('m-correct').textContent=state.stats.correct;
+  document.getElementById('m-best').textContent=state.stats.best;
+  renderXPBar();
+  renderLangInfo();
+  syncLangTabs();
+}
+function renderXPBar(){
+  const rank=getRank(state.stats.best);
+  const ranges=[{min:0,max:50},{min:50,max:150},{min:150,max:300},{min:300,max:500},{min:500,max:1000}];
+  const ri=Math.min(rank.level,ranges.length-1);
+  const r=ranges[ri];
+  const pct=Math.min(100,Math.round((state.stats.best-r.min)/(r.max-r.min)*100));
+  document.getElementById('xp-rank-label').textContent=rank.icon+' '+rank.name;
+  document.getElementById('xp-text').textContent=`${state.stats.best} / ${r.max} XP`;
+  document.getElementById('xp-fill').style.width=pct+'%';
+}
+function renderLangInfo(){
+  const l=state.lang;
+  const info=LANG_INFO[l];
+  document.getElementById('lic-icon').textContent=info.icon;
+  document.getElementById('lic-name').textContent=info.name;
+  document.getElementById('lic-desc').textContent=info.desc;
+  const badge=document.getElementById('lic-badge');
+  const played=state.stats.langPlayed&&state.stats.langPlayed[l];
+  if(played){
+    badge.style.display='inline-block';
+    badge.textContent='✅ Уже играл';
+    badge.style.background='rgba(16,185,129,0.12)';
+    badge.style.color='#6ee7b7';
+  } else {
+    badge.style.display='none';
+  }
+}
+function syncLangTabs(){
+  ['python','java','js','cpp','csharp'].forEach(l=>{
+    const el=document.getElementById('lpt-'+l);
+    el.className='lpt';
+    if(l===state.lang)el.classList.add('active-'+l);
+  });
+}
+function selectLang(lang){
+  state.lang=lang;
+  syncLangTabs();
+  updateLangNav();
+  renderLangInfo();
+  // animate lang info card
+  const card=document.getElementById('lang-info-card');
+  card.style.animation='none';
+  setTimeout(()=>{card.style.animation='cardSlide 0.3s ease'},10);
+}
+function selectLangAndPlay(lang){
+  selectLang(lang);
+  showPage('menu');
+}
+ 
+// ─── GAME ────────────────────────────────────
+function startGame(diff){
+  state.difficulty=diff;
+  state.questions=shuffle([...QUESTIONS[state.lang][diff]]);
+  state.current=0;state.score=0;state.correctCount=0;state.skippedCount=0;state.streak=0;
+  const lMap={python:'🐍 Python',java:'☕ Java',js:'⚡ JavaScript',cpp:'⚙️ C++',csharp:'💠 C#'};
+  const lCode={python:'Python',java:'Java',js:'JavaScript',cpp:'C++',csharp:'C#'};
+  document.getElementById('g-lang-label').textContent=lMap[state.lang]+' · '+{easy:'🌱 Лёгкий',medium:'⚡ Средний',hard:'🔥 Сложный'}[diff];
+  document.getElementById('code-lang-badge').textContent=lCode[state.lang];
+  showPage('game');
+  loadQuestion();
+}
+function restartGame(){startGame(state.difficulty)}
+ 
+function loadQuestion(){
+  const q=state.questions[state.current];
+  const total=state.questions.length;
+  document.getElementById('q-number').textContent=`Вопрос ${state.current+1} / ${total}`;
+  document.getElementById('progress-fill').style.width=(state.current/total*100)+'%';
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('q-hint-text').textContent=q.hint;
+  document.getElementById('code-block').textContent=q.code;
+  document.getElementById('answer-input').value='';
+  document.getElementById('answer-input').style.borderColor='';
+  document.getElementById('cur-score').textContent=state.score;
+  document.getElementById('cur-streak').textContent=state.streak+'🔥';
+  document.getElementById('explain-box').style.display='none';
+  document.getElementById('answer-input').focus();
+  startTimer();
+}
+function startTimer(){
+  stopTimer();
+  state.timerVal=TIMER_LIMITS[state.difficulty];
+  updateTimerUI();
+  state.timerInterval=setInterval(()=>{
+    state.timerVal--;
+    updateTimerUI();
+    if(state.timerVal<=0){stopTimer();timesUp()}
+  },1000);
+}
+function stopTimer(){clearInterval(state.timerInterval);state.timerInterval=null}
+function updateTimerUI(){
+  const el=document.getElementById('timer');
+  el.textContent=state.timerVal;
+  el.classList.toggle('timer-low',state.timerVal<=10);
+}
+function checkAnswer(){
+  const inp=document.getElementById('answer-input');
+  const raw=inp.value.trim().toLowerCase();
+  if(!raw){inp.classList.add('shake');setTimeout(()=>inp.classList.remove('shake'),500);return}
+  const q=state.questions[state.current];
+  const correct=q.answer.some(a=>raw.includes(a.toLowerCase())||a.toLowerCase().includes(raw));
+  if(correct){
+    const ratio=state.timerVal/TIMER_LIMITS[state.difficulty];
+    const bonus=Math.max(1,Math.ceil(ratio*SCORE_POINTS[state.difficulty]));
+    state.score+=bonus;state.correctCount++;state.streak++;
+    if(state.streak>(state.stats.maxStreak||0))state.stats.maxStreak=state.streak;
+    if(state.timerVal>=TIMER_LIMITS[state.difficulty]-5)state.stats.fastAnswers++;
+    showExplain(q.explain,true);
+    showToast(`Верно! +${bonus} очков${state.streak>1?' 🔥×'+state.streak:''}`, 'success');
+    setTimeout(()=>nextQuestion(),1400);
+  } else {
+    state.streak=0;
+    inp.classList.add('shake');setTimeout(()=>inp.classList.remove('shake'),500);
+    showToast('Не верно... попробуй ещё!','error',2000);
+  }
+}
+function showExplain(text,ok){
+  const b=document.getElementById('explain-box');
+  b.textContent=(ok?'✅ ':'💡 ')+text;
+  b.className='explain-box '+(ok?'explain-win':'explain-fail');
+  b.style.display='block';
+}
+document.getElementById('answer-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkAnswer()});
+function skipQuestion(){
+  state.skippedCount++;state.streak=0;
+  const q=state.questions[state.current];
+  showToast('💡 Ответ: '+q.answer[0],'info',3500);
+  nextQuestion();
+}
+function nextQuestion(){
+  stopTimer();state.current++;
+  if(state.current>=state.questions.length)finishGame(true);
+  else setTimeout(()=>loadQuestion(),200);
+}
+function timesUp(){
+  const q=state.questions[state.current];
+  document.getElementById('fail-answer').textContent=`Ответ: ${q.answer[0]} — ${q.explain}`;
+  document.getElementById('f-correct').textContent=state.correctCount;
+  document.getElementById('f-question').textContent=state.current+1;
+  document.getElementById('f-score').textContent=state.score;
+  recordHistory(false);showPage('fail');
+}
+function finishGame(){
+  stopTimer();
+  document.getElementById('progress-fill').style.width='100%';
+  document.getElementById('r-correct').textContent=state.correctCount;
+  document.getElementById('r-skipped').textContent=state.skippedCount;
+  document.getElementById('r-score').textContent=state.score;
+  const pct=Math.round(state.correctCount/state.questions.length*100);
+  document.getElementById('win-sub').textContent=`Точность ${pct}% · ${LANG_INFO[state.lang].name} · ${{easy:'Лёгкий',medium:'Средний',hard:'Сложный'}[state.difficulty]}`;
+  if(state.score>0)spawnConfetti();
+  recordHistory(true);showPage('win');
+}
+function recordHistory(finished){
+  state.stats.games++;state.stats.correct+=state.correctCount;
+  if(state.score>state.stats.best)state.stats.best=state.score;
+  if(state.correctCount===state.questions.length&&finished)state.stats.perfectGames=(state.stats.perfectGames||0)+1;
+  if(state.difficulty==='hard'&&finished){
+    state.stats.hardWins=(state.stats.hardWins||0)+1;
+    const lk={java:'javaHardWins',js:'jsHardWins',cpp:'cppHardWins',csharp:'csharpHardWins'};
+    if(lk[state.lang])state.stats[lk[state.lang]]=(state.stats[lk[state.lang]]||0)+1;
+  }
+  if(!state.stats.langPlayed)state.stats.langPlayed={};
+  state.stats.langPlayed[state.lang]=true;
+  state.history.push({lang:state.lang,diff:state.difficulty,correct:state.correctCount,total:state.questions.length,score:state.score,finished,ts:Date.now()});
+  if(state.history.length>30)state.history.shift();
+  saveStats();updateSidebar();
+}
+ 
+// ─── HISTORY PAGE ────────────────────────────
+function renderHistoryPage(){
+  const el=document.getElementById('history-list-main');
+  if(!state.history.length){el.innerHTML='<div style="color:var(--muted);text-align:center;padding:40px">Ещё нет сыгранных партий</div>';return}
+  const lmap={python:'🐍 Python',java:'☕ Java',js:'⚡ JS',cpp:'⚙️ C++',csharp:'💠 C#'};
+  const dmap={easy:'🌱 Easy',medium:'⚡ Medium',hard:'🔥 Hard'};
+  el.innerHTML=state.history.slice().reverse().map((h,i)=>`
+    <div class="history-row" style="animation-delay:${i*0.04}s">
+      <span class="badge badge-lang">${lmap[h.lang]||h.lang}</span>
+      <span class="badge badge-${h.diff}">${dmap[h.diff]||h.diff}</span>
+      <span style="color:var(--muted2);font-size:14px">${h.correct}/${h.total} верно</span>
+      <span style="color:var(--accent3);font-weight:700">+${h.score} pts</span>
+      <span style="font-size:16px">${h.finished?'✅':'⏰'}</span>
+    </div>`).join('');
+}
+ 
+// ─── ACHIEVEMENTS ────────────────────────────
+function renderAchievements(){
+  document.getElementById('ach-grid').innerHTML=ACHIEVEMENTS_DEF.map(a=>{
+    const ok=a.check(state.stats);
+    return`<div class="ach-item ${ok?'':'locked'}">
+      <div class="ach-icon">${a.icon}</div>
+      <div class="ach-name">${a.name}</div>
+      <div class="ach-desc">${a.desc}</div>
+      ${ok?'<div style="font-size:11px;color:#6ee7b7;margin-top:6px;font-weight:600">✅ Разблокировано</div>':''}
+    </div>`;
+  }).join('');
+}
+ 
+// ─── PROFILE ────────────────────────────────
+function renderProfile(){
+  const p=state.profile,s=state.stats;
+  const avatarEl=document.getElementById('p-avatar');
+  avatarEl.textContent=p.emoji||'🐞';
+  avatarEl.style.background=p.color;
+  document.getElementById('p-username').textContent=state.username;
+  document.getElementById('p-bio').textContent=p.bio||'Нет описания';
+  const rank=getRank(s.best);
+  const rb=document.getElementById('p-rank');
+  rb.textContent=rank.icon+' '+rank.name+(p.favLang?' · '+LANG_INFO[p.favLang]?.name:'');
+  rb.style.background=rank.bg;rb.style.color=rank.color;
+  document.getElementById('ps-games').textContent=s.games;
+  document.getElementById('ps-correct').textContent=s.correct;
+  document.getElementById('ps-best').textContent=s.best;
+  document.getElementById('ps-streak').textContent=s.maxStreak||0;
+  ['python','java','js','cpp','csharp'].forEach(l=>{
+    document.getElementById('ps-'+l).textContent=state.history.filter(h=>h.lang===l).length;
+  });
+  // fill edit form
+  document.getElementById('edit-username').value=state.username;
+  document.getElementById('edit-bio').value=p.bio||'';
+  document.getElementById('edit-fav-lang').value=p.favLang||'';
+  document.getElementById('emoji-picker').innerHTML=AVATAR_EMOJIS.map(e=>`<span class="emoji-opt ${e===p.emoji?'selected':''}" onclick="selectEmoji(this,'${e}')">${e}</span>`).join('');
+  document.getElementById('color-picker').innerHTML=AVATAR_COLORS.map(c=>`<div class="color-opt ${c===p.color?'selected':''}" style="background:${c}" onclick="selectColor(this,'${c}')"></div>`).join('');
+  document.getElementById('profile-edit-section').style.display='none';
+}
+function selectEmoji(el,emoji){document.querySelectorAll('.emoji-opt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');state.profile.emoji=emoji}
+function selectColor(el,color){document.querySelectorAll('.color-opt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');state.profile.color=color}
+function saveProfile(){
+  const n=document.getElementById('edit-username').value.trim();
+  if(!n){showToast('Никнейм не может быть пустым!','error');return}
+  if(n!==state.username)localStorage.removeItem('bughunt3_'+state.username);
+  state.username=n;
+  state.profile.bio=document.getElementById('edit-bio').value.trim();
+  state.profile.favLang=document.getElementById('edit-fav-lang').value;
+  saveStats();renderProfile();updateSidebar();
+  showToast('Профиль сохранён! 💾','success');
+  document.getElementById('profile-edit-section').style.display='none';
+}
+ 
+// ─── RANKS ───────────────────────────────────
+function getRank(best){
+  if(best>=500)return{icon:'👑',name:'Легенда',bg:'rgba(251,191,36,0.15)',color:'#fbbf24',level:4};
+  if(best>=300)return{icon:'💎',name:'Мастер',bg:'rgba(139,92,246,0.15)',color:'#c084fc',level:3};
+  if(best>=150)return{icon:'🔥',name:'Профи',bg:'rgba(239,68,68,0.12)',color:'#fca5a5',level:2};
+  if(best>=50) return{icon:'⚡',name:'Опытный',bg:'rgba(245,158,11,0.12)',color:'#fbbf24',level:1};
+  return{icon:'🌱',name:'Новичок',bg:'rgba(16,185,129,0.12)',color:'#6ee7b7',level:0};
+}
+ 
+// ─── CONFETTI ────────────────────────────────
+function spawnConfetti(){
+  const colors=['#6366f1','#8b5cf6','#a78bfa','#10b981','#f59e0b','#ef4444','#fff','#06b6d4'];
+  for(let i=0;i<60;i++){
+    setTimeout(()=>{
+      const d=document.createElement('div');
+      d.className='confetti-dot';
+      d.style.cssText=`left:${Math.random()*100}vw;top:-10px;background:${colors[~~(Math.random()*colors.length)]};animation-delay:${Math.random()*0.8}s;animation-duration:${1.2+Math.random()*1}s`;
+      document.body.appendChild(d);
+      setTimeout(()=>d.remove(),2500);
+    },i*20);
+  }
+}
+ 
+// ─── UTILS ───────────────────────────────────
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){const j=~~(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}
+  return arr;
+}
+</script>
+</body>
+</html>
